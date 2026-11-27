@@ -8,6 +8,7 @@ import '../services.dart';
 import '../theme.dart';
 import '../widgets.dart';
 import 'possible_match_screen.dart';
+import 'possible_transfer_screen.dart';
 import 'transaction_parts.dart';
 
 /// Review in the desktop window (ticket 64): the lines waiting for Review in
@@ -155,6 +156,14 @@ class _DesktopReviewScreenState extends State<DesktopReviewScreen> {
     if (mounted) setState(() {});
   }
 
+  Future<void> _openPossibleTransfers() async {
+    await openFlow<void>(
+      context,
+      builder: (_) => PossibleTransferScreen(engine: widget.engine),
+    );
+    if (mounted) setState(() {});
+  }
+
   Future<void> _fetch() async {
     final services = AppServicesScope.of(context);
     setState(() => _fetching = true);
@@ -283,6 +292,19 @@ class _DesktopReviewScreenState extends State<DesktopReviewScreen> {
           style: const TextStyle(fontSize: 13, color: Palette.muted),
         ),
         const Spacer(),
+        if (_state.proposedTransfers.length case final transfers
+            when transfers > 0)
+          TextButton.icon(
+            key: const ValueKey('review-possible-transfers'),
+            onPressed: _openPossibleTransfers,
+            icon: const Icon(Icons.swap_horiz, size: 16),
+            label: Text(
+              transfers == 1
+                  ? '1 possible transfer'
+                  : '$transfers possible transfers',
+            ),
+            style: TextButton.styleFrom(minimumSize: const Size(0, 44)),
+          ),
         SizedBox(
           width: 210,
           child: Segmented<bool>(

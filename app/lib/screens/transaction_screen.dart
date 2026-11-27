@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../theme.dart';
 import '../widgets.dart';
 import 'history_screen.dart';
+import 'possible_transfer_screen.dart';
 import 'redact_screen.dart';
 import 'transaction_parts.dart';
 
@@ -48,6 +49,13 @@ class _TransactionScreenState extends State<TransactionScreen> {
   void dispose() {
     _memo.dispose();
     super.dispose();
+  }
+
+  /// Links this line with the other side of a transfer (issue 3). The line
+  /// is replaced by the transfer, so the screen closes.
+  Future<void> _linkTransfer() async {
+    final linked = await pickTransferPartner(context, widget.engine, _saved);
+    if (linked && mounted) Navigator.of(context).pop();
   }
 
   Future<void> _editDetails() async {
@@ -412,6 +420,23 @@ class _TransactionScreenState extends State<TransactionScreen> {
                           Hint(
                             'Last changed by ${actorPhrase(changes.first)} · '
                             '${historyTime(changes.first.time)}',
+                          ),
+                        if (!_saved.isTransfer &&
+                            state.transferPartnersFor(_saved).isNotEmpty)
+                          TextButton(
+                            key: const ValueKey('transaction-link-transfer'),
+                            onPressed: _linkTransfer,
+                            style: TextButton.styleFrom(
+                              minimumSize: const Size(0, 44),
+                              padding: EdgeInsets.zero,
+                              foregroundColor: Palette.teal,
+                              textStyle: const TextStyle(
+                                fontFamily: sansFamily,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            child: const Text('Link as transfer…'),
                           ),
                         TextButton(
                           onPressed: _openHistory,
