@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.1.0](https://github.com/Shir0o/Budget/compare/v1.0.6...v1.1.0) (2026-11-27)
+
+
+### Features
+
+* **mcp:** optional cloud MCP server as one more sync device ([#9](https://github.com/Shir0o/Budget/issues/9)) ([92aab78](https://github.com/Shir0o/Budget/commit/92aab7879c0a46518f3d7f8a342971a95055004a))
+* propose and link bank-imported transfers ([#3](https://github.com/Shir0o/Budget/issues/3)) ([#6](https://github.com/Shir0o/Budget/issues/6)) ([c6c61fd](https://github.com/Shir0o/Budget/commit/c6c61fdd85e1d6a66533ce24c0bf3661a7ba381d))
+* **sync:** connect Google Drive on Android and the Mac ([#10](https://github.com/Shir0o/Budget/issues/10)) ([33c53b9](https://github.com/Shir0o/Budget/commit/33c53b9277bf54ae8e42ec7c492ed5aa55dedce3))
+
 ## [1.0.6](https://github.com/Shir0o/budget/compare/v1.0.5...v1.0.6) (2026-11-21)
 
 
