@@ -17,7 +17,7 @@ dependencies:
   flutter_secure_storage: ^11.2.0
   path_provider: ^2.1.6
   local_auth: ^3.0.2
-  file_picker: ^13.3.3
+  file_picker: ^13.4.1
   qr_flutter: ^4.1.0
   workmanager: ^0.10.10
   google_sign_in_android: ^7.2.19
@@ -27,7 +27,7 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^6.0.0
   archive: ^4.7.1
-  sqlite3: ^3.9.1
+  sqlite3: ^3.9.2
 flutter:
   uses-material-design: true
   assets:
