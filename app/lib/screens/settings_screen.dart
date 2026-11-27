@@ -23,6 +23,7 @@ import 'mcp_screen.dart';
 import 'recovery_phrase_screen.dart';
 import 'schedules_screen.dart';
 import 'settings_desktop.dart';
+import 'store_orders_screen.dart';
 
 /// Settings (canvas: Settings). On a phone it is one scrolling list. In the
 /// desktop window it is a pane sidebar beside the chosen pane (ticket 66),
@@ -165,6 +166,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
           value: 'SimpleFIN',
           onTap: () => _openFlow(
             ConnectBankScreen(engine: widget.engine, services: widget.services),
+          ),
+        ),
+        SettingsRow(
+          label: 'Store item names',
+          value: 'Amazon, Walmart',
+          onTap: () => _open(
+            StoreOrdersScreen(engine: widget.engine, services: widget.services),
           ),
         ),
         SettingsRow(

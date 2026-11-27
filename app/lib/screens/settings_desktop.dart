@@ -22,6 +22,7 @@ import 'mcp_screen.dart';
 import 'pair_device_screen.dart';
 import 'recovery_phrase_screen.dart';
 import 'redact_screen.dart';
+import 'store_orders_screen.dart';
 
 /// One pane of the desktop Settings window (ticket 66). The labels follow the
 /// macOS mock-up, and each pane opens the existing settings screen it names.
@@ -425,6 +426,16 @@ class _DesktopSettingsViewState extends State<DesktopSettingsView> {
             label: 'Import & compare',
             onTap: () => _open(
               ImportCompareScreen(
+                engine: widget.engine,
+                services: widget.services,
+              ),
+            ),
+          ),
+          SettingsRow(
+            label: 'Store item names',
+            value: 'Amazon, Walmart',
+            onTap: () => _open(
+              StoreOrdersScreen(
                 engine: widget.engine,
                 services: widget.services,
               ),
