@@ -6,6 +6,7 @@ import '../flows.dart';
 import '../theme.dart';
 import '../widgets.dart';
 import 'possible_match_screen.dart';
+import 'possible_transfer_screen.dart';
 import 'review_desktop.dart';
 import 'transaction_parts.dart';
 
@@ -85,6 +86,14 @@ class _ReviewScreenState extends State<ReviewScreen> {
     setState(() {}); // The engine's state may have changed.
   }
 
+  Future<void> _openPossibleTransfers() async {
+    await openFlow<void>(
+      context,
+      builder: (_) => PossibleTransferScreen(engine: widget.engine),
+    );
+    setState(() {}); // The engine's state may have changed.
+  }
+
   @override
   Widget build(BuildContext context) {
     // In the desktop window Review is a list with a detail panel beside it
@@ -96,6 +105,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
     final queue = state.reviewQueue;
     final attention = needsAttention(state);
     final matches = state.proposedMatches;
+    final transfers = state.proposedTransfers;
     final item = queue.firstOrNull;
     if (item != null) _load(item);
     return Scaffold(
@@ -147,6 +157,13 @@ class _ReviewScreenState extends State<ReviewScreen> {
               _PossibleMatches(
                 count: matches.length,
                 onTap: _openPossibleMatches,
+              ),
+              const SizedBox(height: 12),
+            ],
+            if (transfers.isNotEmpty) ...[
+              PossibleTransfersLink(
+                count: transfers.length,
+                onTap: _openPossibleTransfers,
               ),
               const SizedBox(height: 12),
             ],
