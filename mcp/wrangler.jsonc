@@ -1,0 +1,25 @@
+{
+  // The cloud MCP server (ADR 0004). Setup: mcp/README.md.
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "budget-mcp",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-11-01",
+  "compatibility_flags": ["nodejs_compat"],
+  // Builds the Dart budget logic into src/budget.dart.js before each deploy.
+  "build": { "command": "npm run build:dart" },
+  "vars": {
+    // Your Worker's address, as `wrangler deploy` prints it.
+    "PUBLIC_URL": "https://budget-mcp.YOUR-SUBDOMAIN.workers.dev",
+    // read-only or read-write.
+    "MCP_MODE": "read-only",
+    // In read-write mode, which write tools to offer.
+    "MCP_WRITE_TOOLS": "suggest_review,update_transaction,revert_change"
+  },
+  "kv_namespaces": [
+    // Make it with: npx wrangler kv namespace create OAUTH_KV
+    { "binding": "OAUTH_KV", "id": "REPLACE_WITH_YOUR_KV_ID" }
+  ],
+  // Replaying a long history can take more than the free plan's 10 ms of CPU.
+  "limits": { "cpu_ms": 30000 },
+  "observability": { "enabled": true }
+}

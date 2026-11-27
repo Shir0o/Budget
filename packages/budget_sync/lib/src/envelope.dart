@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:budget_core/budget_core.dart';
@@ -31,6 +32,15 @@ abstract final class SealedFile {
 
   static final _cipher = Xchacha20.poly1305Aead();
 
+  /// The platform's secure random source. The nonce is drawn here rather
+  /// than with the cipher's own helper, which looks for a browser `window`
+  /// in a JavaScript build and fails in a Cloudflare Worker (ADR 0004).
+  static final _random = Random.secure();
+
+  static List<int> _nonce() => [
+    for (var i = 0; i < _nonceLength; i++) _random.nextInt(256),
+  ];
+
   static Future<Uint8List> seal({
     required String name,
     required Map<String, Object?> body,
@@ -40,7 +50,7 @@ abstract final class SealedFile {
     final box = await _cipher.encrypt(
       utf8.encode(jsonEncode(body)),
       secretKey: SecretKey(key.bytes),
-      nonce: _cipher.newNonce(),
+      nonce: _nonce(),
       aad: [...header, ...utf8.encode(name)],
     );
     return Uint8List.fromList([...header, ...box.concatenation(nonce: true)]);

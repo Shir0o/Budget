@@ -57,6 +57,22 @@ jobs:
         working-directory: packages/budget_store
         run: dart test
 
+      - name: Test budget_cloud
+        working-directory: packages/budget_cloud
+        run: dart test
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: mcp/package-lock.json
+
+      # The cloud MCP Worker (ADR 0004): types, then the compiled Dart tools
+      # against a fake Drive with made-up data.
+      - name: Check the cloud MCP Worker
+        working-directory: mcp
+        run: npm ci && npm run check && npm run smoke
+
       - name: Test app
         working-directory: app
         run: flutter test --coverage

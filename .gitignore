@@ -16,3 +16,10 @@ coverage/
 # Release credentials (see RELEASING.md)
 fastlane/play-supply-credentials.json
 Gemfile.lock
+
+# Cloud MCP Worker (mcp/)
+mcp/node_modules/
+mcp/.wrangler/
+mcp/.dev.vars
+mcp/src/budget.dart.js*
+mcp/test/.fixture.json

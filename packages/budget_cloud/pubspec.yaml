@@ -1,0 +1,19 @@
+name: budget_cloud
+description: >-
+  The cloud MCP server's budget logic (ADR 0004): the MCP tools over the
+  encrypted Drive sync, compiled to JavaScript for a Cloudflare Worker.
+publish_to: none
+resolution: workspace
+
+environment:
+  sdk: ^3.13.0
+
+dependencies:
+  budget_core: any
+  budget_mcp: any
+  budget_sync: any
+  cryptography: ^2.9.0
+
+dev_dependencies:
+  lints: ^6.1.0
+  test: ^1.26.0

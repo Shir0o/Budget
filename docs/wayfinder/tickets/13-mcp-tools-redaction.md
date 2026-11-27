@@ -46,3 +46,7 @@ Which MCP tools does the local server expose, what are its write limits, and how
 4. **Account names:** reduced to at most a last-4 suffix.
 
 - **Inputs:** write tools **reject** values that match rules 1–3, with the error "Account or card numbers can't be stored."
+
+### Cloud server (ADR 0004)
+
+An optional Cloudflare Worker (`mcp/`) serves the same tools over HTTPS by joining Drive sync as the device `cloud-mcp`. It is read-only unless set to read-write, offers only the write tools in `MCP_WRITE_TOOLS` (by default `suggest_review`, `update_transaction` and `revert_change`), and asks for the owner's password before approving each MCP client. Setup: [mcp/README.md](../../../mcp/README.md).

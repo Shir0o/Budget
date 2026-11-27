@@ -117,6 +117,7 @@ class _EncryptedSyncScreenState extends State<EncryptedSyncScreen> {
   static String _platform(String platform) => switch (platform) {
     'android' => 'Android',
     'mac' => 'Mac',
+    'cloud' => 'cloud MCP server',
     _ => 'other device',
   };
 

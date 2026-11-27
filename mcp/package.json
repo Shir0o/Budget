@@ -1,0 +1,21 @@
+{
+  "name": "budget-mcp-worker",
+  "private": true,
+  "type": "module",
+  "description": "The cloud MCP server: a Cloudflare Worker that reads and writes the budget through encrypted Drive sync (ADR 0004).",
+  "scripts": {
+    "build:dart": "cd ../packages/budget_cloud && dart compile js -O2 web/main.dart -o ../../mcp/src/budget.dart.js",
+    "check": "tsc --noEmit",
+    "smoke": "npm run build:dart && cd ../packages/budget_cloud && dart run tool/smoke_fixture.dart ../../mcp/test/.fixture.json && cd ../../mcp && node test/smoke.mjs",
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "dependencies": {
+    "@cloudflare/workers-oauth-provider": "^1.4.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261127.1",
+    "typescript": "^5.9.3",
+    "wrangler": "^4.168.0"
+  }
+}
