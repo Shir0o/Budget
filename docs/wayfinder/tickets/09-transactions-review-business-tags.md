@@ -48,3 +48,10 @@ What does a transaction need before it counts as reviewed, how do Business Tags 
 - **Detail:** every tagged line with date, payee, account, amount, memo, tag, recipient, and deductible amount.
 - **Warnings:** Unreviewed lines in the year, missing business-use %, and gift lines without a recipient.
 - **Export:** CSV with two files (summary and detail). The data is produced on the device and never uploaded. A footer reads: "Records only. Not tax advice."
+
+### Store item names (issue 4)
+
+- **Optional.** Settings › Store item names reads an Amazon or Walmart order history export (CSV, or Amazon's zip with `Retail.OrderHistory`) chosen on the device. The file is read in memory and not kept; nothing signs in to a store and nothing leaves the device.
+- **Charges, not orders.** Amazon rows are grouped by order and ship date, because each shipment is charged on its own; a multi-shipment order is also offered as one whole charge. Cancelled rows are skipped.
+- **Matching:** a bank outflow with an Unreviewed line, the store's payee, exactly the charge's total, dated 2 days before to 7 days after it. Each line and each charge matches at most once, the closest date first.
+- **Offers only.** "Add item names" puts the item names in the memo; "Split by item" turns a one-line transaction into one line per item, each with the item name as its memo and no Category. Both are ordinary edits a person taps; every line stays Unreviewed and goes through Review as usual (ADR 0003). Card-like numbers in item names are masked first.

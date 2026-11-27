@@ -5,6 +5,7 @@ library;
 export 'src/drive.dart';
 export 'src/drive_http.dart';
 export 'src/envelope.dart';
+export 'src/google_sign_in.dart';
 export 'src/in_memory_drive.dart';
 export 'src/merge.dart';
 export 'src/pairing.dart';

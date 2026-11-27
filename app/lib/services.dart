@@ -93,6 +93,63 @@ abstract interface class BankSyncScheduler {
   Future<void> cancel();
 }
 
+/// Signing this device in to Google for Drive sync (ADR 0002). It asks for
+/// the `drive.appdata` scope only, and hands sync its access token.
+abstract interface class DriveSignIn implements DriveAccess {
+  /// False when this build has no Google OAuth client, so sync can't run.
+  bool get available;
+
+  /// The connected Google account's email address, or null.
+  Future<String?> account();
+
+  /// Shows Google's sign-in and returns the account's email address. Throws
+  /// [DriveException] with a message to show when it doesn't connect.
+  Future<String> connect();
+
+  /// Forgets the sign-in on this device. Nothing in Drive changes.
+  Future<void> disconnect();
+}
+
+/// A sign-in for tests and previews: connected as a made-up account unless
+/// told otherwise.
+final class InMemoryDriveSignIn implements DriveSignIn {
+  InMemoryDriveSignIn({
+    this.signedInAs = 'sam@example.com',
+    this.available = true,
+    this.connectsAs = 'sam@example.com',
+  });
+
+  /// The connected account, or null.
+  String? signedInAs;
+
+  @override
+  final bool available;
+
+  /// Who [connect] signs in as. Null makes it fail, as cancelling does.
+  String? connectsAs;
+
+  var connects = 0;
+
+  @override
+  Future<String?> account() async => signedInAs;
+
+  @override
+  Future<String> connect() async {
+    connects++;
+    final email = connectsAs;
+    if (email == null) {
+      throw const DriveException('Google sign-in was cancelled.');
+    }
+    return signedInAs = email;
+  }
+
+  @override
+  Future<void> disconnect() async => signedInAs = null;
+
+  @override
+  Future<String?> accessToken() async => signedInAs == null ? null : 'token';
+}
+
 /// Everything the app needs from the device, in one place so tests and
 /// previews can swap it.
 final class AppServices {
@@ -105,13 +162,15 @@ final class AppServices {
     SimpleFinTransport? simpleFin,
     BankSyncScheduler? scheduler,
     DriveGateway? drive,
+    DriveSignIn? driveSignIn,
     this.mcp,
     bool appLockEnabled = false,
   }) : appLockEnabled = ValueNotifier(appLockEnabled),
        loader = loader ?? InMemoryFileLoader(),
        simpleFin = SimpleFinClient(simpleFin ?? FakeSimpleFinTransport()),
        scheduler = scheduler ?? FakeBankSyncScheduler(),
-       drive = drive ?? InMemoryDrive();
+       drive = drive ?? InMemoryDrive(),
+       driveSignIn = driveSignIn ?? InMemoryDriveSignIn();
 
   /// In-memory services for tests and previews.
   factory AppServices.inMemory() => AppServices(
@@ -139,6 +198,9 @@ final class AppServices {
   /// The Google Drive app data folder sync writes to. Tests and previews
   /// keep it in memory, so nothing leaves the device.
   final DriveGateway drive;
+
+  /// The Google sign-in [drive] uses. Tests start connected.
+  final DriveSignIn driveSignIn;
 
   /// The budgets and settings shared with the `budget-mcp` binary (ticket
   /// 13). The MCP server is macOS only, so this is null where it can't run.
