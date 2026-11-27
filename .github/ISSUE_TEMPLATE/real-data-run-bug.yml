@@ -1,0 +1,55 @@
+name: Real-data run bug
+description: Something broke during the real-data test run (issue 5). Made-up numbers only.
+title: "[real-data run] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This repository is public. **Do not include real payees, amounts, account names,
+        dates of real purchases, screenshots of your budget, tokens or your recovery phrase.**
+        Describe the problem with made-up numbers (for example "an account shows 10.00 more
+        than Actual").
+  - type: dropdown
+    id: step
+    attributes:
+      label: Which step of the run?
+      options:
+        - 1. Install
+        - 2. Import from Actual / compare with YNAB
+        - 3. Balances and Available
+        - 4. Bank sync (SimpleFIN)
+        - 5. A week of Review
+        - 6. Encrypted sync and the Mac
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: App version and device
+      placeholder: "e.g. 1.4.0 on Android 16"
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what did you expect?
+      description: Made-up numbers only.
+      placeholder: |
+        Expected: after the second fetch, no new lines.
+        Happened: one line (made up: -12.34 at "Coffee") appeared twice.
+    validations:
+      required: true
+  - type: textarea
+    id: repeat
+    attributes:
+      label: How to make it happen again
+      description: Steps, with made-up data if data matters.
+  - type: checkboxes
+    id: private
+    attributes:
+      label: Privacy check
+      options:
+        - label: I checked that nothing above is real financial or personal data.
+          required: true
