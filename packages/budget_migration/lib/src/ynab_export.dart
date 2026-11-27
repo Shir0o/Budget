@@ -327,6 +327,9 @@ String _text(Uint8List bytes) => utf8.decode(bytes, allowMalformed: true);
 
 /// The CSV's rows of fields. Handles quotes, `""` escapes and commas or line
 /// breaks inside a field.
+/// The rows of a CSV [text], for the other readers in this package.
+List<List<String>> readCsv(String text) => _csv(text);
+
 List<List<String>> _csv(String text) {
   final rows = <List<String>>[];
   var row = <String>[];

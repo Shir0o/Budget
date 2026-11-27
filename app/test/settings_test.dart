@@ -41,6 +41,8 @@ Future<void> _openExport(WidgetTester tester) async {
 
 Future<void> _openAppLock(WidgetTester tester) async {
   await _openSettings(tester);
+  await tester.ensureVisible(find.text('App lock'));
+  await tester.pumpAndSettle();
   await tester.tap(find.text('App lock'));
   await tester.pumpAndSettle();
 }
