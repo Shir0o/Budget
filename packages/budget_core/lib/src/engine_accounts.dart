@@ -159,6 +159,79 @@ CommandResult _createTransfer(
   ]);
 }
 
+/// Replaces two existing lines with a linked transfer pair (issue 3). Each
+/// side keeps its own date, payee, memo, cleared state and bank id; deleting
+/// the old lines and creating the pair in one group keeps it revertable.
+CommandResult _linkTransfer(
+  LinkTransfer command,
+  BudgetState state,
+  _Stamp stamp,
+) {
+  if (!stamp.actor.isPerson) return const Rejected(Rejection.personRequired);
+  final outflow = state.transaction(command.outflowId);
+  final inflow = state.transaction(command.inflowId);
+  if (outflow == null || inflow == null) {
+    return const Rejected(Rejection.unknownTransaction);
+  }
+  if (!canLinkAsTransfer(outflow, inflow)) {
+    return const Rejected(Rejection.notATransferPair);
+  }
+  if (outflow.cleared == ClearedStatus.reconciled ||
+      inflow.cleared == ClearedStatus.reconciled) {
+    return const Rejected(Rejection.reconciledNeedsConfirmation);
+  }
+  final from = state.account(outflow.accountId);
+  final to = state.account(inflow.accountId);
+  if (from == null || to == null) {
+    return const Rejected(Rejection.unknownAccount);
+  }
+  final category = command.category;
+  final fromCategory = from.type.onBudget && !to.type.onBudget
+      ? category
+      : null;
+  final toCategory = to.type.onBudget && !from.type.onBudget ? category : null;
+  if (category != null && fromCategory == null && toCategory == null) {
+    return const Rejected(Rejection.transferHasNoCategory);
+  }
+  for (final (side, other, sideCategory, inflow) in [
+    (from, to, fromCategory, false),
+    (to, from, toCategory, true),
+  ]) {
+    if (_checkTransferCategory(state, side, other, sideCategory, inflow: inflow)
+        case final rejected?) {
+      return rejected;
+    }
+  }
+
+  final fromId = newId();
+  final toId = newId();
+  Event side(
+    Transaction line,
+    String id,
+    Account other,
+    String pairId,
+    String? category,
+  ) => stamp.event(EventType.transactionCreated, {
+    'transactionId': id,
+    'accountId': line.accountId,
+    'date': line.date.toIso(),
+    'payee': line.payee,
+    'memo': line.memo,
+    'cleared': line.cleared.name,
+    'amountCents': line.amount.cents,
+    'transferAccountId': other.id,
+    'transferTransactionId': pairId,
+    'bankId': ?line.bankId,
+    'lines': [_transferLine(line.amount, category, stamp.actor)],
+  });
+  return Accepted([
+    for (final line in [outflow, inflow])
+      stamp.event(EventType.transactionDeleted, {'transactionId': line.id}),
+    side(outflow, fromId, to, toId, fromCategory),
+    side(inflow, toId, from, fromId, toCategory),
+  ]);
+}
+
 /// Checks a transfer side's new [amount] and [lines]: one line, with the
 /// Category its side needs.
 Rejected? _checkTransferLines(

@@ -158,6 +158,39 @@ bool withinPostedWindow(Money pending, Money posted) {
   return after * 100 >= before * 90 && after * 100 <= before * 125;
 }
 
+/// How many days apart the two bank-imported sides of a transfer may be and
+/// still be proposed as one (issue 3). A card payment can take a few
+/// business days to arrive.
+const bankTransferWindowDays = 5;
+
+/// Whether [outflow] and [inflow] have the shape of one transfer's two
+/// sides (issue 3): different accounts, equal and opposite amounts, and
+/// single plain lines that aren't already a transfer, a Starting Balance or
+/// waiting on a possible bank match.
+bool canLinkAsTransfer(Transaction outflow, Transaction inflow) {
+  bool plain(Transaction t) =>
+      !t.isTransfer &&
+      !t.startingBalance &&
+      !t.isSplit &&
+      t.pendingMatch == null;
+  return outflow.accountId != inflow.accountId &&
+      outflow.amount.isNegative &&
+      inflow.amount == -outflow.amount &&
+      plain(outflow) &&
+      plain(inflow);
+}
+
+/// Two bank-imported lines that look like the two sides of one transfer or
+/// card payment (issue 3). It is only ever a proposal: a person links them
+/// with [LinkTransfer] (ADR 0003), and reviewing either line as spending
+/// makes the proposal go away.
+final class TransferProposal {
+  const TransferProposal({required this.outflow, required this.inflow});
+
+  final Transaction outflow;
+  final Transaction inflow;
+}
+
 extension BankSync on BudgetState {
   /// The transaction a fetch imported with [bankId] into [accountId], or
   /// null when this is the first time it arrived. A bank id is only unique
@@ -235,6 +268,73 @@ extension BankSync on BudgetState {
       }
     }
     return best;
+  }
+
+  /// Pairs of posted, still Unreviewed bank lines that look like one
+  /// transfer (issue 3): [canLinkAsTransfer], both budget accounts or both
+  /// tracking accounts (so the transfer needs no Category), and dated within
+  /// [bankTransferWindowDays]. Each line is in at most one pair, the closest
+  /// in date, oldest outflow first.
+  List<TransferProposal> get proposedTransfers {
+    bool eligible(Transaction t) =>
+        t.bankId != null &&
+        t.cleared == ClearedStatus.cleared &&
+        t.lines.every((line) => !line.reviewed) &&
+        account(t.accountId) != null;
+    final candidates = transactions.where(eligible).toList()
+      ..sort((a, b) => a.date.compareTo(b.date));
+    final taken = <String>{};
+    final proposals = <TransferProposal>[];
+    for (final outflow in candidates) {
+      if (!outflow.amount.isNegative) continue;
+      final onBudget = account(outflow.accountId)!.type.onBudget;
+      Transaction? best;
+      var bestDays = 0;
+      for (final inflow in candidates) {
+        if (taken.contains(inflow.id) ||
+            !canLinkAsTransfer(outflow, inflow) ||
+            account(inflow.accountId)!.type.onBudget != onBudget) {
+          continue;
+        }
+        final days = _daysBetween(outflow.date, inflow.date);
+        if (days > bankTransferWindowDays) continue;
+        if (best == null || days < bestDays) {
+          best = inflow;
+          bestDays = days;
+        }
+      }
+      if (best == null) continue;
+      taken.add(best.id);
+      proposals.add(TransferProposal(outflow: outflow, inflow: best));
+    }
+    return proposals;
+  }
+
+  /// The lines [transaction] could be linked with as one transfer, the
+  /// closest in date first, for a person to pick from (issue 3): any account
+  /// of the same kind (budget or tracking), not Reconciled, with
+  /// [canLinkAsTransfer] either way round.
+  List<Transaction> transferPartnersFor(Transaction transaction) {
+    final kind = account(transaction.accountId)?.type.onBudget;
+    if (kind == null || transaction.cleared == ClearedStatus.reconciled) {
+      return const [];
+    }
+    final partners = [
+      for (final other in transactions)
+        if (other.cleared != ClearedStatus.reconciled &&
+            account(other.accountId)?.type.onBudget == kind &&
+            (transaction.amount.isNegative
+                ? canLinkAsTransfer(transaction, other)
+                : canLinkAsTransfer(other, transaction)))
+          other,
+    ];
+    partners.sort(
+      (a, b) => _daysBetween(
+        a.date,
+        transaction.date,
+      ).compareTo(_daysBetween(b.date, transaction.date)),
+    );
+    return partners;
   }
 
   /// Transactions waiting on a possible bank match, in the order they were
