@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.2](https://github.com/Shir0o/Budget/compare/v1.1.1...v1.1.2) (2026-11-27)
+
+
+### Bug Fixes
+
+* **ui:** fix settings row alignment and small-screen overflow ([#18](https://github.com/Shir0o/Budget/issues/18)) ([b124834](https://github.com/Shir0o/Budget/commit/b1248346f03e9bdd9c988ab12e4b11dbf7d6069c))
+
 ## [1.1.1](https://github.com/Shir0o/Budget/compare/v1.1.0...v1.1.1) (2026-11-27)
 
 
