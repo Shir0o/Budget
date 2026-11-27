@@ -488,6 +488,7 @@ class _EntryCard extends StatelessWidget {
     final device = switch (history.devicePlatform(entry.deviceId)) {
       'android' => 'Android · ',
       'mac' => 'Mac · ',
+      'cloud' => 'Cloud · ',
       _ => '',
     };
     final action = entry.isRevert
