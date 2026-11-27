@@ -43,3 +43,9 @@ appDataFolder/<budgetId>/
 - **Plain export:** CSV (transactions, Plan-style monthly assignments) and JSON (full state).
 
 Sync is off by default. The app works fully without it.
+
+### Google sign-in
+
+- Each device connects its own Google account on the Encrypted sync screen (and on Join a budget), with the `drive.appdata` scope only. Android uses Google Play services' Authorization API; the Mac uses Google's page in the browser with a loopback redirect and PKCE, and keeps the refresh token in the Keychain.
+- The account's email comes from Drive's `about` endpoint, so no email or profile scope is asked for.
+- The OAuth clients live in the owner's Google Cloud project, never in the repo: [setup](../../setup/google-drive-sign-in.md).

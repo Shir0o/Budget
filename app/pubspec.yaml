@@ -20,6 +20,8 @@ dependencies:
   file_picker: ^13.3.3
   qr_flutter: ^4.1.0
   workmanager: ^0.10.10
+  google_sign_in_android: ^7.2.19
+  google_sign_in_platform_interface: ^3.1.0
 dev_dependencies:
   flutter_test:
     sdk: flutter

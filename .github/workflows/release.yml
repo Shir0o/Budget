@@ -259,9 +259,18 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      # Google sign-in for Drive sync (docs/setup/google-drive-sign-in.md).
+      # Unset, the app says sign-in isn't set up instead of failing.
       - name: Build release macOS app
         working-directory: app
-        run: flutter build macos --release --no-tree-shake-icons --build-name="$VERSION_NAME" --build-number="$VERSION_CODE"
+        env:
+          GOOGLE_DESKTOP_CLIENT_ID: ${{ vars.GOOGLE_DESKTOP_CLIENT_ID }}
+          GOOGLE_DESKTOP_CLIENT_SECRET: ${{ secrets.GOOGLE_DESKTOP_CLIENT_SECRET }}
+        run: >-
+          flutter build macos --release --no-tree-shake-icons
+          --build-name="$VERSION_NAME" --build-number="$VERSION_CODE"
+          --dart-define=GOOGLE_DESKTOP_CLIENT_ID="$GOOGLE_DESKTOP_CLIENT_ID"
+          --dart-define=GOOGLE_DESKTOP_CLIENT_SECRET="$GOOGLE_DESKTOP_CLIENT_SECRET"
 
       - name: Verify macOS signing secrets
         if: env.HAS_SIGNING_CERT == 'true'

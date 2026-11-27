@@ -42,6 +42,7 @@ Future<void> main() async {
     deviceId: deviceId,
     actor: userActorFor(Platform.operatingSystem),
   );
+  final driveSignIn = platformDriveSignIn(secrets);
   final services = AppServices(
     keys: const SecureBudgetKeyStore(secrets),
     prefs: prefs,
@@ -51,11 +52,12 @@ Future<void> main() async {
     simpleFin: const HttpSimpleFinTransport(),
     scheduler: const WorkManagerBankSyncScheduler(),
     // Google Drive's hidden app data folder only (ADR 0002). The token comes
-    // from Google Sign-In, which needs the OAuth client id.
+    // from this device's Google sign-in (Encrypted sync › Connect).
     drive: GoogleDriveAppData(
       transport: const HttpDriveTransport(),
-      access: const SecureDriveAccess(secrets),
+      access: driveSignIn,
     ),
+    driveSignIn: driveSignIn,
     // budget-mcp is macOS only (ticket 13); its registry sits next to the
     // encrypted store files.
     mcp: Platform.isMacOS ? FileMcpStore(dir.path) : null,
