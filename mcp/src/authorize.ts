@@ -7,10 +7,12 @@ const MIN_PASSWORD = 20;
 
 const escape = (value: string) => value.replace(/[&<>"']/g, (char) => `&#${char.charCodeAt(0)};`);
 
+// Omit form-action: Chromium enforces it across the 302 redirect chain after
+// POST /authorize, which blocks redirecting back to the MCP client's callback.
 const frameHeaders = {
   "content-type": "text/html; charset=utf-8",
   "x-frame-options": "DENY",
-  "content-security-policy": "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'",
+  "content-security-policy": "default-src 'none'; style-src 'unsafe-inline'; frame-ancestors 'none'",
   "cache-control": "no-store",
 };
 
