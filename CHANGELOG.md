@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/Shir0o/Budget/compare/v1.1.0...v1.1.1) (2026-11-27)
+
+
+### Bug Fixes
+
+* **android:** upgrade AGP to 9.1.1 and Gradle to 9.5.0 ([#16](https://github.com/Shir0o/Budget/issues/16)) ([6e23690](https://github.com/Shir0o/Budget/commit/6e23690445b1219d1f7cbeb68e42405d6128783c))
+
 ## [1.1.0](https://github.com/Shir0o/Budget/compare/v1.0.6...v1.1.0) (2026-11-27)
 
 
