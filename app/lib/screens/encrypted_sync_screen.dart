@@ -2,6 +2,7 @@ import 'package:budget_core/budget_core.dart';
 import 'package:budget_sync/budget_sync.dart';
 import 'package:flutter/material.dart';
 
+import '../drive_account.dart';
 import '../services.dart';
 import '../settings_widgets.dart';
 import '../sync.dart';
@@ -38,6 +39,9 @@ class _EncryptedSyncScreenState extends State<EncryptedSyncScreen> {
   var _errors = <String>[];
   var _attention = <NeedsAttention>[];
 
+  /// The Google account sync goes through, or null until one is connected.
+  String? _driveAccount;
+
   @override
   void initState() {
     super.initState();
@@ -49,13 +53,22 @@ class _EncryptedSyncScreenState extends State<EncryptedSyncScreen> {
     final book = budget == null
         ? SyncBook.off
         : await widget.services.prefs.readSyncBook(budget.id);
+    final account = await widget.services.driveSignIn.account();
     if (!mounted) return;
     setState(() {
       _book = book;
+      _driveAccount = account;
       _loaded = true;
     });
     // Sync on open, as it does when the app starts (ticket 12).
-    if (book.enabled) await _sync();
+    if (book.enabled && account != null) await _sync();
+  }
+
+  void _driveChanged(String? account) {
+    final connectedNow = _driveAccount == null && account != null;
+    setState(() => _driveAccount = account);
+    // Connecting again after a lapse catches up straight away.
+    if (connectedNow && _book.enabled) _sync();
   }
 
   Future<void> _setEnabled(bool enabled) async {
@@ -156,6 +169,11 @@ class _EncryptedSyncScreenState extends State<EncryptedSyncScreen> {
                         ),
                         const SizedBox(height: 12),
                       ],
+                      DriveAccountCard(
+                        services: widget.services,
+                        onChanged: _driveChanged,
+                      ),
+                      const SizedBox(height: 12),
                       if (_book.enabled) _on() else _off(),
                       if (_message.isNotEmpty) ...[
                         const SizedBox(height: 12),
@@ -209,7 +227,9 @@ class _EncryptedSyncScreenState extends State<EncryptedSyncScreen> {
             ),
             FilledButton(
               key: const ValueKey('turn-on-sync'),
-              onPressed: _busy ? null : () => _setEnabled(true),
+              onPressed: _busy || _driveAccount == null
+                  ? null
+                  : () => _setEnabled(true),
               child: Text(_busy ? 'Turning on…' : 'Turn on sync'),
             ),
           ],
@@ -260,7 +280,7 @@ class _EncryptedSyncScreenState extends State<EncryptedSyncScreen> {
             children: [
               FilledButton(
                 key: const ValueKey('sync-now'),
-                onPressed: _busy ? null : _sync,
+                onPressed: _busy || _driveAccount == null ? null : _sync,
                 child: Text(_busy ? 'Syncing…' : 'Sync now'),
               ),
               OutlinedButton(

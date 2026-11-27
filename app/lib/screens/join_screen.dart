@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../budget_library.dart';
+import '../drive_account.dart';
 import '../services.dart';
 import '../settings_widgets.dart';
 import '../shell.dart';
@@ -24,6 +25,9 @@ class _JoinScreenState extends State<JoinScreen> {
   final _code = TextEditingController();
   String? _problem;
   var _busy = false;
+
+  /// The Google account to read the budget from, or null until connected.
+  String? _driveAccount;
 
   @override
   void dispose() {
@@ -70,6 +74,12 @@ class _JoinScreenState extends State<JoinScreen> {
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
                 children: [
+                  DriveAccountCard(
+                    services: widget.services,
+                    onChanged: (account) =>
+                        setState(() => _driveAccount = account),
+                  ),
+                  const SizedBox(height: 12),
                   CardBox(
                     padding: const EdgeInsets.all(18),
                     child: Column(
@@ -119,7 +129,9 @@ class _JoinScreenState extends State<JoinScreen> {
                           ),
                         FilledButton(
                           key: const ValueKey('join-budget'),
-                          onPressed: _busy ? null : _join,
+                          onPressed: _busy || _driveAccount == null
+                              ? null
+                              : _join,
                           child: Text(_busy ? 'Joining…' : 'Join this budget'),
                         ),
                       ],
