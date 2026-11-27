@@ -497,6 +497,29 @@ final class ConfirmBankMatch extends Command {
   final String transactionId;
 }
 
+/// A person says two lines in different accounts are the two sides of one
+/// transfer, such as a card payment that left checking and arrived on the
+/// card (issue 3). Both lines are replaced by a linked transfer pair that
+/// keeps each side's date, payee, memo, cleared state and bank id, so later
+/// fetches still update them in place. Only a person links (ADR 0003): it
+/// takes both lines out of Review. [category] follows [CreateTransfer]'s
+/// rules: none between two budget accounts, and the budget side's Category
+/// between a budget and a tracking account.
+final class LinkTransfer extends Command {
+  const LinkTransfer({
+    required this.outflowId,
+    required this.inflowId,
+    this.category,
+  });
+
+  /// The line money left, with a negative amount.
+  final String outflowId;
+
+  /// The line money arrived on, for the same amount, positive.
+  final String inflowId;
+  final String? category;
+}
+
 /// A person says a bank charge is not the line it looked like (ticket 10,
 /// step 4). The transaction stays as it is, and the charge becomes a new
 /// Unreviewed transaction.
@@ -670,6 +693,12 @@ enum Rejection {
   /// [ConfirmBankMatch] of a line whose amount someone has changed since the
   /// match was offered, so it is no longer the same money movement.
   matchAmountChanged,
+
+  /// [LinkTransfer] of lines that can't be one transfer: the same account,
+  /// amounts that aren't equal and opposite, a line that is already a
+  /// transfer, a Starting Balance, a split, or one waiting on a possible bank
+  /// match.
+  notATransferPair,
 
   /// [ReviewLine] without a Category.
   categoryRequired,

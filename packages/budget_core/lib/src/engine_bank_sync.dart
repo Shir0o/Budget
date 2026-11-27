@@ -44,7 +44,9 @@ CommandResult _importBankTransactions(
       final pending = state.postedReplacementFor(entry, except: replaced);
       if (pending != null) {
         replaced.add(pending.id);
-        events.addAll(_replacePending(stamp, pending, entry, payee, cleared));
+        events.addAll(
+          _replacePending(state, stamp, pending, entry, payee, cleared),
+        );
         continue;
       }
       final candidate = state.proposedMatchFor(entry, except: proposed);
@@ -101,7 +103,7 @@ CommandResult _importBankTransactions(
       );
     }
     if (existing.amount != entry.amount) {
-      events.add(_bankAmountSet(stamp, existing, entry.amount));
+      events.addAll(_bankAmountEvents(state, stamp, existing, entry.amount));
     }
   }
 
@@ -135,6 +137,7 @@ CommandResult _importBankTransactions(
 /// [entry]: the bank's id, date and cleared state, and its amount, keeping
 /// the person's Category, business status and memo (ticket 10, step 2).
 List<Event> _replacePending(
+  BudgetState state,
   _Stamp stamp,
   Transaction pending,
   BankEntry entry,
@@ -153,9 +156,39 @@ List<Event> _replacePending(
     }),
   ];
   if (pending.amount != entry.amount) {
-    events.add(_bankAmountSet(stamp, pending, entry.amount));
+    events.addAll(_bankAmountEvents(state, stamp, pending, entry.amount));
   }
   return events;
+}
+
+/// The Events for the bank's new [amount] on [transaction]. A plain line
+/// goes back to Review ([_bankAmountSet]). A linked transfer side (issue 3)
+/// isn't in Review, so both sides take the amount and the pair still nets
+/// to zero.
+List<Event> _bankAmountEvents(
+  BudgetState state,
+  _Stamp stamp,
+  Transaction transaction,
+  Money amount,
+) {
+  if (!transaction.isTransfer) {
+    return [_bankAmountSet(stamp, transaction, amount)];
+  }
+  final pair = state.transaction(transaction.transferTransactionId!);
+  return [
+    for (final (side, value) in [
+      (transaction, amount),
+      if (pair != null) (pair, -amount),
+    ])
+      stamp.event(EventType.transactionSplitSet, {
+        'transactionId': side.id,
+        'amountCents': value.cents,
+        'lines': [
+          for (final line in side.lines)
+            {..._storedLine(line), 'amountCents': value.cents},
+        ],
+      }),
+  ];
 }
 
 /// The Event that gives [transaction] the bank's new [amount] and sends it

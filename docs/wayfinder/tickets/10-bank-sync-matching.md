@@ -39,3 +39,9 @@ How does SimpleFIN bank sync connect, when does it fetch, and how are incoming b
 5. **Otherwise:** create a new **Unreviewed** transaction with actor `bank-sync`.
 
 - **Balance check** after each fetch: compare the bank's `balance` with the app's balance (cleared + uncleared, pending included). If they differ, show a discrepancy badge on the account that links to Reconcile.
+
+### Transfers between linked accounts (issue 3)
+
+- **Proposed transfers:** two posted, still **Unreviewed**, single-line bank lines in different accounts of the same kind (both budget or both tracking), with **equal and opposite** amounts, dated within **5 days**, are offered as one transfer. Each line is in at most one proposal, the closest in date. Proposals are worked out from the current state, not stored, so reviewing either line as spending makes the proposal go away.
+- **Link as transfer:** only a person links (ADR 0003), from the proposal or by picking the other side on a transaction. Linking deletes the two lines and creates a linked transfer pair in **one group**, keeping each side's date, payee, memo, cleared state and bank id, so later fetches still update the sides in place and the group reverts to the two lines. A card payment spends the card's Card Payment Category, as a hand-made transfer does.
+- **Bank amount change on a linked side:** both sides take the new amount, so the pair still nets to zero.
