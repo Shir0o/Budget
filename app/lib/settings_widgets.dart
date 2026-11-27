@@ -139,28 +139,84 @@ class _RowTile extends StatelessWidget {
         onTap: row.onTap,
         child: Container(
           constraints: const BoxConstraints(minHeight: 52),
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          // The vertical padding keeps a wrapped label off the card's edges.
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           decoration: BoxDecoration(
             border: first
                 ? null
                 : const Border(top: BorderSide(color: Palette.divider)),
           ),
-          child: Row(
-            spacing: 12,
-            children: [
-              Text(row.label, style: const TextStyle(fontSize: 15)),
-              const Spacer(),
-              if (value != null)
-                Flexible(
-                  child: Text(
-                    value,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 13, color: Palette.muted),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              // A narrow row, or large text: the value takes its own line under
+              // the label so neither is clipped. The chevron stays on the right.
+              final compact =
+                  constraints.maxWidth < 300 ||
+                  MediaQuery.textScalerOf(context).scale(1) > 1.3;
+              if (compact && value != null) {
+                return Row(
+                  spacing: 12,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        spacing: 2,
+                        children: [
+                          Text(row.label, style: const TextStyle(fontSize: 15)),
+                          Text(
+                            value,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: Palette.muted,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (row.onTap != null)
+                      const Icon(
+                        Icons.chevron_right,
+                        size: 18,
+                        color: Palette.muted,
+                      ),
+                  ],
+                );
+              }
+              return Row(
+                spacing: 12,
+                children: [
+                  Expanded(
+                    child: Text(
+                      row.label,
+                      style: const TextStyle(fontSize: 15),
+                    ),
                   ),
-                ),
-              if (row.onTap != null)
-                const Icon(Icons.chevron_right, size: 18, color: Palette.muted),
-            ],
+                  if (value != null)
+                    // The value holds at most 45% of the row, but wraps rather
+                    // than truncating, so long values stay readable.
+                    ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth: constraints.maxWidth * 0.45,
+                      ),
+                      child: Text(
+                        value,
+                        textAlign: TextAlign.end,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Palette.muted,
+                        ),
+                      ),
+                    ),
+                  if (row.onTap != null)
+                    const Icon(
+                      Icons.chevron_right,
+                      size: 18,
+                      color: Palette.muted,
+                    ),
+                ],
+              );
+            },
           ),
         ),
       ),

@@ -6,6 +6,7 @@ import 'package:budget/screens/budget_screen.dart';
 import 'package:budget/screens/category_screen.dart';
 import 'package:budget/screens/history_screen.dart';
 import 'package:budget/screens/review_screen.dart';
+import 'package:budget/screens/settings_screen.dart';
 import 'package:budget/widgets.dart';
 import 'package:budget_core/budget_core.dart';
 import 'package:flutter/material.dart';
@@ -244,6 +245,26 @@ Future<void> _openBudgetSwitcher(WidgetTester tester, String view) async {
   expect(find.text('Budgets'), findsNothing);
 }
 
+/// Opens Settings from the Budget header, checks it, then taps Back to return
+/// to the month.
+Future<void> _openSettings(
+  WidgetTester tester,
+  String view, {
+  required String capture,
+}) async {
+  await tester.tap(find.byTooltip('Settings'));
+  await tester.pumpAndSettle();
+  expect(find.byType(SettingsScreen), findsOneWidget);
+  _expectNoOverflow(tester, '$view: Settings');
+  await _expectGuidelines(tester, '$view: Settings');
+  await _capture(tester, capture);
+
+  await tester.tap(find.byTooltip('Back'));
+  await tester.pumpAndSettle();
+  expect(find.byType(SettingsScreen), findsNothing);
+  expect(find.byType(BudgetScreen), findsOneWidget);
+}
+
 /// Picks a Category for the line in Review: the sheet opens, the Category is
 /// tapped, and the sheet closes with the button now showing it.
 Future<void> _pickReviewCategory(WidgetTester tester, String view) async {
@@ -326,6 +347,10 @@ Future<void> _capturePrimaryViews(
   // The budget switcher, opened from the header and closed on its own row.
   await _openBudgetSwitcher(tester, view);
   _expectNoOverflow(tester, '$view after the budget switcher');
+
+  // Settings, opened from the header and closed with its Back arrow.
+  await _openSettings(tester, view, capture: '${prefix}_settings');
+  _expectNoOverflow(tester, '$view after the Settings screen');
 
   // A Category and its Archive dialog, then back to the month.
   await _openCategoryAndDialog(tester, view, capture: '${prefix}_category');
