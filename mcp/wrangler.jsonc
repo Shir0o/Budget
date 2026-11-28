@@ -11,9 +11,9 @@
     // The Worker's address comes from each request. To pin it, for example
     // to a custom domain, add "PUBLIC_URL": "https://<your address>" here.
     // read-only or read-write.
-    "MCP_MODE": "read-only",
+    "MCP_MODE": "read-write",
     // In read-write mode, which write tools to offer.
-    "MCP_WRITE_TOOLS": "suggest_review,update_transaction,revert_change"
+    "MCP_WRITE_TOOLS": "suggest_review,update_transaction,revert_change,mark_imported_reviewed"
   },
   "kv_namespaces": [
     // No id: `wrangler deploy` makes the store on the first deploy and keeps
