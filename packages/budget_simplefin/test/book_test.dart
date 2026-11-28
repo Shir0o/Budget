@@ -72,8 +72,18 @@ void main() {
     test('is the last 90 days when nothing is linked yet', () {
       final window = const SimpleFinBook().window(_today);
 
-      expect(window.start, CivilDate(2026, 8, 14));
+      expect(window.start, CivilDate(2026, 8, 15));
       expect(window.end, _today);
+      // 90 days counting today: the bridge caps anything longer.
+      var days = 0;
+      for (
+        var d = window.start;
+        d.compareTo(window.end) <= 0;
+        d = d.addDays(1)
+      ) {
+        days++;
+      }
+      expect(days, FetchWindow.maxDays);
     });
 
     test('starts at the earliest linked-from date', () {
@@ -92,7 +102,7 @@ void main() {
         links: [_link(linkedFrom: CivilDate(2026, 1, 1))],
       );
 
-      expect(book.window(_today).start, CivilDate(2026, 8, 14));
+      expect(book.window(_today).start, CivilDate(2026, 8, 15));
     });
 
     test('re-reads the 10 days before the last successful fetch', () {

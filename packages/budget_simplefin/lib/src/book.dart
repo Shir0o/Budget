@@ -157,7 +157,8 @@ final class RequestCount {
 final class FetchWindow {
   const FetchWindow({required this.start, required this.end});
 
-  /// The longest window a single request may cover (ticket 03).
+  /// The longest window a single request may cover, in days counting both
+  /// ends (ticket 03).
   static const maxDays = 90;
 
   /// How far back of the last successful fetch each request re-reads.
@@ -403,11 +404,13 @@ final class SimpleFinBook {
     return found;
   }
 
-  /// The window one fetch asks for: at most 90 days back, never before the
-  /// earliest linked-from date, and re-reading the 10 days before the last
-  /// successful fetch (ticket 10).
+  /// The window one fetch asks for: at most 90 days counting today, never
+  /// before the earliest linked-from date, and re-reading the 10 days before
+  /// the last successful fetch (ticket 10). The request runs from the start
+  /// of its first day to the end of today, so 90 days back would be 91 days
+  /// and the bridge would cap it with a warning.
   FetchWindow window(CivilDate today) {
-    final floor = today.addDays(-FetchWindow.maxDays);
+    final floor = today.addDays(1 - FetchWindow.maxDays);
     final last = lastFetch;
     var start = last == null ? floor : last.addDays(-FetchWindow.recheckDays);
     if (start.compareTo(floor) < 0) start = floor;
