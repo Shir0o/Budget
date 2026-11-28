@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/Shir0o/Budget/compare/v1.1.4...v1.2.0) (2026-11-28)
+
+
+### Features
+
+* **app:** add the Treemap app icon ([#25](https://github.com/Shir0o/Budget/issues/25)) ([3cab21e](https://github.com/Shir0o/Budget/commit/3cab21e2f9b60ce4b6d9daba278efbe12003650c))
+
 ## [1.1.4](https://github.com/Shir0o/Budget/compare/v1.1.3...v1.1.4) (2026-11-28)
 
 
