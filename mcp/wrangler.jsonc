@@ -9,7 +9,7 @@
   "build": { "command": "npm run build:dart" },
   "vars": {
     // Your Worker's address, as `wrangler deploy` prints it.
-    "PUBLIC_URL": "https://budget-mcp.YOUR-SUBDOMAIN.workers.dev",
+    "PUBLIC_URL": "https://budget-mcp.yilongwang05.workers.dev",
     // read-only or read-write.
     "MCP_MODE": "read-only",
     // In read-write mode, which write tools to offer.
@@ -17,9 +17,7 @@
   },
   "kv_namespaces": [
     // Make it with: npx wrangler kv namespace create OAUTH_KV
-    { "binding": "OAUTH_KV", "id": "REPLACE_WITH_YOUR_KV_ID" }
+    { "binding": "OAUTH_KV", "id": "ed04d2f87d904c058ff2b237a636ffd7" }
   ],
-  // Replaying a long history can take more than the free plan's 10 ms of CPU.
-  "limits": { "cpu_ms": 30000 },
   "observability": { "enabled": true }
 }

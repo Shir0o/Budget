@@ -11,9 +11,9 @@ export async function driveAccessToken(env: Env): Promise<string> {
     headers: { "content-type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({
       grant_type: "refresh_token",
-      client_id: env.GOOGLE_CLIENT_ID,
-      client_secret: env.GOOGLE_CLIENT_SECRET,
-      refresh_token: env.GOOGLE_REFRESH_TOKEN,
+      client_id: env.GOOGLE_CLIENT_ID.trim(),
+      client_secret: env.GOOGLE_CLIENT_SECRET.trim(),
+      refresh_token: env.GOOGLE_REFRESH_TOKEN.trim(),
     }),
   });
   if (!response.ok) {
