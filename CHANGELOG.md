@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.3](https://github.com/Shir0o/Budget/compare/v1.1.2...v1.1.3) (2026-11-28)
+
+
+### Bug Fixes
+
+* **mcp:** omit form-action CSP directive on /authorize ([#20](https://github.com/Shir0o/Budget/issues/20)) ([ea0647e](https://github.com/Shir0o/Budget/commit/ea0647ec897e680c67300a6759ed152e3162c901))
+* **sync:** keep subfolder listings in the app data space ([#22](https://github.com/Shir0o/Budget/issues/22)) ([99fcc7d](https://github.com/Shir0o/Budget/commit/99fcc7ddd10b2e6a39892d2113ad62b149790261))
+
 ## [1.1.2](https://github.com/Shir0o/Budget/compare/v1.1.1...v1.1.2) (2026-11-27)
 
 
