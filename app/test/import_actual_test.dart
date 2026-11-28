@@ -195,6 +195,49 @@ void main() {
     );
   });
 
+  testWidgets('Map tags can make a new Business Tag with the same name', (
+    tester,
+  ) async {
+    final (engine, _) = _home();
+    final services = AppServices.inMemory();
+    (services.loader as InMemoryFileLoader).next = _zip();
+    await tester.pumpWidget(BudgetApp(engine: engine, services: services));
+    await _openImport(tester);
+
+    await tester.tap(find.byKey(const ValueKey('choose-actual-export')));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(
+      find.byKey(const ValueKey('import-match-names')),
+    );
+    await tester.tap(find.byKey(const ValueKey('import-match-names')));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const ValueKey('import-map-tags')));
+    await tester.tap(find.byKey(const ValueKey('import-map-tags')));
+    await tester.pumpAndSettle();
+
+    const groceries = ValueKey('tag-map-category-cat-groceries');
+    await tester.ensureVisible(find.byKey(groceries));
+    await tester.tap(find.byKey(groceries));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('New tag: Groceries').last);
+    await tester.pumpAndSettle();
+
+    await tester.ensureVisible(find.byKey(const ValueKey('import-commit')));
+    await tester.tap(find.byKey(const ValueKey('import-commit')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('import-done')), findsOneWidget);
+    final tag = engine.state.businessTag('Groceries');
+    expect(tag?.custom, isTrue);
+    expect(tag?.line, '27a (other)');
+    expect(
+      engine.state.transactions
+          .expand((t) => t.lines)
+          .where((line) => line.business == const Business('Groceries')),
+      isNotEmpty,
+    );
+  });
+
   testWidgets('says so when the file is not an Actual export', (tester) async {
     final (engine, _) = _home();
     final services = AppServices.inMemory();

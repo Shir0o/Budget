@@ -15,6 +15,23 @@ CommandResult _commitImport(
   final groups = {for (final group in state.categoryGroups) group.id};
   final categories = {for (final category in state.categories) category.id};
   final tags = {for (final tag in state.businessTags) tag.name};
+  final tagNames = {for (final tag in tags) tag.toLowerCase()};
+  for (final tag in batch.businessTags) {
+    final name = tag.name.trim();
+    if (name.isEmpty ||
+        !tagNames.add(name.toLowerCase()) ||
+        !scheduleCLines.contains(tag.line)) {
+      return _invalidImport;
+    }
+    switch (tag.rule) {
+      case PercentDeduction(:final percent) when percent < 1 || percent > 100:
+        return _invalidImport;
+      case PerRecipientCapDeduction(:final cap) when !cap.isPositive:
+        return _invalidImport;
+      default:
+    }
+    tags.add(name);
+  }
   final used = <String>{};
 
   /// Whether [id] is new to both the log and this batch.
@@ -197,6 +214,12 @@ CommandResult _commitImport(
   }
 
   return Accepted([
+    for (final tag in batch.businessTags)
+      stamp.event(EventType.businessTagCreated, {
+        'name': tag.name.trim(),
+        'line': tag.line,
+        'rule': tag.rule.toJson(),
+      }),
     for (final account in batch.accounts)
       stamp.event(EventType.accountCreated, {
         'accountId': account.id,

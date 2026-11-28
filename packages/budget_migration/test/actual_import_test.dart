@@ -127,6 +127,15 @@ void main() {
     );
   });
 
+  group('actualTags', () {
+    test('skips a # followed only by digits, such as an order number', () {
+      expect(actualTags('Order #7 for #workSupplies, invoice #2025-04'), {
+        '#workSupplies',
+      });
+      expect(actualTags('#7 #w7 #7w'), {'#w7', '#7w'});
+    });
+  });
+
   group('ImportPlan', () {
     test('maps accounts: off-budget to tracking and closed stays listed', () {
       final plan = _plan();
@@ -375,6 +384,58 @@ void main() {
   });
 
   group('commitImport', () {
+    test(
+      'creates a new Business Tag named after the #tag in the same group',
+      () {
+        final (engine, log) = _engine();
+        final before = engine.events.length;
+        final tags = [
+          for (final mapping in defaultTagMappings(_export))
+            switch (mapping.key) {
+              '#workTravel' => mapping.withNewTag(),
+              '#workMeals' => mapping.withTag(null),
+              _ => mapping,
+            },
+        ];
+
+        final commit = commitImport(engine, _plan(tags: tags));
+
+        final added = log.readAll().skip(before).toList();
+        expect(added.map((event) => event.groupId).toSet(), {commit.groupId});
+        final created = engine.state.businessTag('workTravel');
+        expect(created, isNotNull);
+        expect(created!.custom, isTrue);
+        expect(created.line, importedTagLine);
+        expect(created.rule, isA<FullDeduction>());
+        final trip = engine.state.transaction(
+          'actual-transaction-tx-conflict',
+        )!;
+        expect(trip.lines.single.business, const Business('workTravel'));
+      },
+    );
+
+    test('refuses a new Business Tag whose name is already taken', () {
+      final (engine, log) = _engine();
+      final before = engine.events.length;
+      final tags = [
+        for (final mapping in defaultTagMappings(_export))
+          mapping.key == '#workTravel'
+              ? const TagMapping(
+                  source: TagSource.tag,
+                  key: '#workTravel',
+                  label: '#Meals',
+                  count: 1,
+                ).withNewTag()
+              : mapping,
+      ];
+
+      expect(
+        () => commitImport(engine, _plan(tags: tags)),
+        throwsA(isA<ImportBlocked>()),
+      );
+      expect(log.readAll().length, before);
+    });
+
     test('writes the whole import as one group with actor import', () {
       final (engine, log) = _engine();
       final before = engine.events.length;
