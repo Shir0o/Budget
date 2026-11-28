@@ -61,7 +61,7 @@ void main() {
     expect(request.headers['authorization'], 'Bearer tok');
   });
 
-  test('lists a folder by parent, with no other space named', () async {
+  test('lists a folder by parent, still inside the app data space', () async {
     final transport = _FakeTransport(
       () => _json({
         'files': [
@@ -78,7 +78,7 @@ void main() {
 
     final query = transport.requests.single.uri.queryParameters;
     expect(query['q'], "'budget-folder' in parents and trashed = false");
-    expect(query.containsKey('spaces'), isFalse);
+    expect(query['spaces'], 'appDataFolder');
     expect(entries.map((e) => e.name), ['seg-000001.bin', 'device-a']);
     expect(entries.last.isFolder, isTrue);
   });

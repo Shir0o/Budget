@@ -105,8 +105,10 @@ final class GoogleDriveAppData implements DriveGateway {
       'GET',
       _api,
       query: {
-        // Only the app data folder, never the person's own Drive.
-        if (folderId == null) 'spaces': appDataFolder,
+        // Only the app data folder, never the person's own Drive. Omitting
+        // `spaces` defaults to `drive`, which a `drive.appdata`-only token
+        // may not read (HTTP 403), so it is always named.
+        'spaces': appDataFolder,
         'q': folderId == null
             ? 'trashed = false'
             : "'$folderId' in parents and trashed = false",
