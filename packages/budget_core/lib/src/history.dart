@@ -859,8 +859,12 @@ final class ChangeHistory {
     if (records.every((r) => r.event.type == EventType.transactionCreated)) {
       return 'Added ${records.length} transactions';
     }
-    if (records.every(_onlyMarksReviewed)) {
-      return 'Marked ${records.length} transactions Reviewed';
+    if (records.every((r) => _linesMarkedReviewed(r) > 0)) {
+      final lines = records.fold(0, (sum, r) => sum + _linesMarkedReviewed(r));
+      final transactions = records.length;
+      return lines == transactions
+          ? 'Marked $lines transactions Reviewed'
+          : 'Marked $lines lines Reviewed in $transactions transactions';
     }
     if (effects.map((e) => e.entity).toSet().length == 1 &&
         effects.first.entity.kind == EntityKind.transaction) {
@@ -1091,30 +1095,31 @@ String _list(List<String> names) => names.length == 1
     ? names.single
     : '${names.sublist(0, names.length - 1).join(', ')} and ${names.last}';
 
-/// Whether [record] is a TransactionSplitSet that only marks lines Reviewed,
-/// as MarkImportedReviewed writes, with every other value unchanged.
-bool _onlyMarksReviewed(_Record record) {
-  if (record.event.type != EventType.transactionSplitSet) return false;
+/// How many lines [record] marks Reviewed, when it is a TransactionSplitSet
+/// that only does that, as MarkImportedReviewed writes, with every other
+/// value unchanged. Otherwise 0.
+int _linesMarkedReviewed(_Record record) {
+  if (record.event.type != EventType.transactionSplitSet) return 0;
   final applied = record.applied;
-  if (applied == null || applied.length != 1) return false;
+  if (applied == null || applied.length != 1) return 0;
   final effect = applied.single.effect;
-  if (effect is! SetsFields) return false;
+  if (effect is! SetsFields) return 0;
   final before = applied.single.before[splitField];
   final after = effect.fields[splitField];
-  if (before is! Map || after is! Map) return false;
-  if (before['amountCents'] != after['amountCents']) return false;
+  if (before is! Map || after is! Map) return 0;
+  if (before['amountCents'] != after['amountCents']) return 0;
   final oldLines = (before['lines'] as List?) ?? const [];
   final newLines = (after['lines'] as List?) ?? const [];
-  if (oldLines.length != newLines.length) return false;
-  var marked = false;
+  if (oldLines.length != newLines.length) return 0;
+  var marked = 0;
   for (var i = 0; i < oldLines.length; i++) {
     final old = Map<String, Object?>.of((oldLines[i] as Map).cast());
     final now = Map<String, Object?>.of((newLines[i] as Map).cast());
-    if (old['reviewed'] != true && now['reviewed'] == true) marked = true;
-    if (old['reviewed'] == true && now['reviewed'] != true) return false;
+    if (old['reviewed'] != true && now['reviewed'] == true) marked++;
+    if (old['reviewed'] == true && now['reviewed'] != true) return 0;
     old.remove('reviewed');
     now.remove('reviewed');
-    if (jsonEncode(old) != jsonEncode(now)) return false;
+    if (jsonEncode(old) != jsonEncode(now)) return 0;
   }
   return marked;
 }

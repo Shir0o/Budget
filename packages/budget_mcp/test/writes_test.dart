@@ -454,6 +454,41 @@ void main() {
       );
     });
 
+    test('update_transaction changes a one-line amount', () async {
+      final seed = _Seed();
+      final result = await _call(seed, 'update_transaction', {
+        'transactionId': seed.unreviewed,
+        'amountCents': -5000,
+      });
+      expect(result.isError, isFalse, reason: result.text);
+      final transaction = seed.state.transaction(seed.unreviewed)!;
+      expect(transaction.amount, const Money(-5000));
+      expect(transaction.lines.single.amount, const Money(-5000));
+
+      final zero = await _call(seed, 'update_transaction', {
+        'transactionId': seed.unreviewed,
+        'amountCents': 0,
+      });
+      expect(zero.isError, isTrue);
+      expect(zero.content['error'], contains('delete it in the app'));
+    });
+
+    test('a repeated write says it may already have gone through', () async {
+      final seed = _Seed();
+      final lineId = seed.state.transaction(seed.unreviewed)!.lines.single.id;
+      final arguments = {
+        'transactionId': seed.unreviewed,
+        'lineId': lineId,
+        'business': 'personal',
+      };
+      expect((await _call(seed, 'suggest_review', arguments)).isError, isFalse);
+
+      final again = await _call(seed, 'suggest_review', arguments);
+      expect(again.isError, isTrue);
+      expect(again.content['error'], contains('already has those values'));
+      expect(again.content['error'], contains('get_change_history'));
+    });
+
     test('mark_imported_reviewed marks only imported lines', () async {
       final seed = _Seed();
       final result = await _call(seed, 'mark_imported_reviewed', const {});

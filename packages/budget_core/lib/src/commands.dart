@@ -114,7 +114,8 @@ final class CreateTransaction extends Command {
 
 /// Changes a transaction. Null fields stay as they are. When [amount] or
 /// [lines] is given, the lines (new or current) must sum to the amount (new
-/// or current), and the whole line set is replaced.
+/// or current), and the whole line set is replaced. An [amount] without
+/// [lines] on a transaction with one line moves that line to the new amount.
 final class EditTransaction extends Command {
   const EditTransaction({
     required this.transactionId,

@@ -743,6 +743,46 @@ void main() {
       expect(budget.line(second).reviewed, isFalse);
     });
 
+    test('the summary counts lines when a transaction has several', () {
+      final budget = _Budget();
+      budget.spend(
+        1200,
+        category: budget.diningOut,
+        business: const Personal(),
+        actor: Actor.imported,
+      );
+      budget.run(
+        CreateTransaction(
+          accountId: budget.checking,
+          date: CivilDate(2026, 11, 3),
+          amount: const Money(-5000),
+          payee: 'Sample Market',
+          lines: [
+            LineInput(
+              amount: const Money(-3000),
+              category: budget.groceries,
+              business: const Personal(),
+            ),
+            LineInput(
+              amount: const Money(-2000),
+              category: budget.diningOut,
+              business: const Personal(),
+            ),
+          ],
+        ),
+        Actor.imported,
+      );
+
+      final events = budget.run(const MarkImportedReviewed(), mcp);
+
+      expect(
+        ChangeHistory.of(budget.log.readAll())
+            .entry(events.first.groupId)
+            ?.summary,
+        'Marked 3 lines Reviewed in 2 transactions',
+      );
+    });
+
     test('a person may run it too, but not bank sync or automation', () {
       final budget = _Budget();
       budget.spend(
