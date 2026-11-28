@@ -241,8 +241,8 @@ final class ImportPlan {
   /// behind. Every line reads as a sentence.
   final List<String> warnings;
 
-  /// The current tax year: its lines arrive Unreviewed and pre-filled,
-  /// earlier years Reviewed (ticket 09).
+  /// The current tax year, which the business report starts from (ticket
+  /// 09).
   int get currentTaxYear => today.year;
 
   ImportBatch toBatch() => ImportBatch(

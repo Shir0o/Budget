@@ -165,8 +165,8 @@ void main() {
     expect(state.balance(card.id), const Money(-2000));
     expect(state.cardPaymentCategory(card.id)?.name, 'Travel Card Payment');
 
-    // The current year is Unreviewed; last year is Reviewed.
-    expect(state.reviewQueue, hasLength(1));
+    // Every year arrives Reviewed, as it was in Actual.
+    expect(state.reviewQueue, isEmpty);
     expect(
       state.transactions
           .singleWhere((t) => t.payee == 'Employer')

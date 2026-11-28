@@ -196,13 +196,13 @@ ImportPlan buildImportPlan({
           category: categoryId,
           business: transfer.isTransfer || startingBalance ? null : business,
           memo: line == row ? '' : maskSensitiveNumbers(line.notes),
-          // Only earlier years import Reviewed; the current tax year waits
-          // for a person's tap (ADR 0003, ticket 09).
+          // A person already reviewed these lines in Actual, so they import
+          // Reviewed in every year (ADR 0003). A line mapped to two tags, or
+          // a gift with no recipient, still needs a decision here.
           reviewed:
-              row.date.year < today.year &&
-              (transfer.isTransfer ||
-                  startingBalance ||
-                  (!conflicted && business != const Business(giftsTag))),
+              transfer.isTransfer ||
+              startingBalance ||
+              (!conflicted && business != const Business(giftsTag)),
         ),
       );
     }

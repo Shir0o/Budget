@@ -89,10 +89,10 @@ class _MatchNamesScreenState extends State<MatchNamesScreen> {
                   ),
                   const SizedBox(height: 12),
                   InfoNote(
-                    '${plan.report.reviewedLines} earlier-year lines import '
-                    'Reviewed. ${plan.report.unreviewedLines} lines from '
-                    '${plan.currentTaxYear} import Unreviewed and pre-filled, '
-                    'and wait for your tap.',
+                    '${plan.report.reviewedLines} lines import Reviewed, as '
+                    'they were in Actual. ${plan.report.unreviewedLines} '
+                    'still need a decision, such as a gift’s recipient, and '
+                    'wait in Review.',
                   ),
                 ],
               ),

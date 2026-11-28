@@ -25,8 +25,7 @@ What does a transaction need before it counts as reviewed, how do Business Tags 
 
 ### Imported history
 
-- **Current tax year:** imported as Unreviewed, pre-filled from the tag mapping (ticket 14).
-- **Earlier years:** imported as Reviewed. Lines whose flag, `#tag`, or category maps to a Business Tag get that tag; all other lines are `Personal`.
+- **Every year:** imported as Reviewed, because a person already reviewed them in Actual. Lines whose flag, `#tag`, or category maps to a Business Tag get that tag; all other lines are `Personal`. A line mapped to two Business Tags, or a gift with no recipient, imports Unreviewed so a person decides it. (Changed 2026-11-28; earlier, the current tax year imported Unreviewed.)
 
 ### Other transaction rules
 
