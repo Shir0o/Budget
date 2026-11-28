@@ -235,6 +235,17 @@ final class SuggestReview extends Command {
   final String? recipient;
 }
 
+/// Marks Reviewed, as one change, every Unreviewed line in the Review
+/// queue that a one-time import brought in and that needs nothing more
+/// (`reviewNeed` is null). For a budget imported before imports arrived
+/// Reviewed (ADR 0003, amended): the person said everything they imported
+/// was already reviewed. Lines that still need a Category, Personal or
+/// Business, a Business Tag or a gift's recipient stay Unreviewed. A person
+/// or MCP may run it; any other actor is rejected.
+final class MarkImportedReviewed extends Command {
+  const MarkImportedReviewed();
+}
+
 /// Adds a category group, such as Bills or Everyday.
 final class CreateCategoryGroup extends Command {
   const CreateCategoryGroup({required this.name});
@@ -668,7 +679,8 @@ enum Rejection {
   hasDependents,
 
   /// [ReviewLine] from bank sync, automation, an import, MCP or a revert.
-  /// Only a person marks a line Reviewed (ADR 0003).
+  /// Only a person marks a line Reviewed (ADR 0003). Also
+  /// [MarkImportedReviewed] from anyone but a person or MCP.
   personRequired,
 
   /// [RedactField] of an entity or field this version can't rewrite, or

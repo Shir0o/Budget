@@ -126,8 +126,9 @@ const _line = {
 };
 
 /// Ticket 13's write tools, in its order. `revert_change` undoes one group
-/// MCP itself wrote; there is no tool that deletes anything or marks a line
-/// Reviewed.
+/// MCP itself wrote. No tool deletes anything, and the only one that marks
+/// lines Reviewed is `mark_imported_reviewed`, for lines a one-time import
+/// brought in (ADR 0003, amended).
 final writeTools = <WriteTool>[
   WriteTool(
     name: 'create_transaction',
@@ -345,6 +346,18 @@ final writeTools = <WriteTool>[
     build: _suggestReview,
   ),
   WriteTool(
+    name: 'mark_imported_reviewed',
+    description:
+        'Marks Reviewed, as one change, every Unreviewed line that a one-time '
+        'import (such as from Actual) brought in and that already has a '
+        'Category and Personal or Business, and a recipient for a gift. Lines '
+        'that still need something stay Unreviewed, and lines from bank sync '
+        'or added by hand are never touched. Revert it with revert_change.',
+    arguments: {'budgetId': BudgetTools._budgetId},
+    required: ['budgetId'],
+    build: _markImportedReviewed,
+  ),
+  WriteTool(
     name: 'revert_change',
     description:
         'Reverts one Event group MCP wrote, by the groupId a write tool '
@@ -360,6 +373,9 @@ final writeTools = <WriteTool>[
 
 const _reconciledIsAPersons =
     'Reconciled is the person\'s call: they must make that change in the app.';
+
+Command _markImportedReviewed(ToolRequest request, CalendarMonth thisMonth) =>
+    const MarkImportedReviewed();
 
 Command _createTransaction(ToolRequest request, CalendarMonth thisMonth) =>
     CreateTransaction(

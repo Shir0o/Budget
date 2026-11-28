@@ -147,7 +147,8 @@ final class ToolSpec {
 }
 
 /// The read tools ticket 13 lists, and the write tools Read-write mode adds.
-/// Nothing here deletes anything or marks a line Reviewed.
+/// Nothing here deletes anything, and only `mark_imported_reviewed` marks
+/// lines Reviewed: those a one-time import brought in (ADR 0003, amended).
 final class BudgetTools {
   BudgetTools({
     required this.store,

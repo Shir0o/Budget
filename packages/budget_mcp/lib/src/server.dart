@@ -49,6 +49,7 @@ const _instructions =
     'Access to one local budget, as far as Settings allows: Off, Read-only or '
     'Read-write. Every string is redacted: card and account numbers never '
     'leave the device, and account names carry at most a last-4 suffix. '
-    'Nothing here deletes anything or marks a line Reviewed; a person does '
-    'both in the app. Each write is one Event group with actor mcp:<client>, '
+    'Nothing here deletes anything. Only a person marks a line Reviewed in '
+    'the app, except mark_imported_reviewed, which does it for lines a '
+    'one-time import brought in. Each write is one Event group with actor mcp:<client>, '
     'revertable with revert_change or from Change History.';

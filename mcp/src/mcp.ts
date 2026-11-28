@@ -12,8 +12,9 @@ const INSTRUCTIONS =
   "Access to one budget through its encrypted Google Drive sync, as of the " +
   "last sync from the phone or the Mac. Every string is redacted: card and " +
   "account numbers never leave, and account names carry at most a last-4 " +
-  "suffix. Nothing here deletes anything or marks a line Reviewed; a person " +
-  "does both in the app. Each write is one change with actor mcp:<client>, " +
+  "suffix. Nothing here deletes anything. Only a person marks a line " +
+  "Reviewed in the app, except mark_imported_reviewed, if offered, which " +
+  "does it for lines a one-time import brought in. Each write is one change with actor mcp:<client>, " +
   "revertable with revert_change or from Change History.";
 
 type Id = string | number | null;

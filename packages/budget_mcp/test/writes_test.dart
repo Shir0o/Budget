@@ -85,6 +85,24 @@ final class _Seed {
       ),
       'transactionId',
     );
+    // A line a one-time import brought in Unreviewed, already complete.
+    imported = _id(
+      BudgetEngine(log: log, deviceId: 'test-device', actor: Actor.imported),
+      CreateTransaction(
+        accountId: checking,
+        date: CivilDate(2026, 10, 2),
+        amount: const Money(-2599),
+        payee: 'Sample Market',
+        lines: [
+          LineInput(
+            amount: const Money(-2599),
+            category: groceries,
+            business: const Personal(),
+          ),
+        ],
+      ),
+      'transactionId',
+    );
     store = InMemoryMcpStore([
       McpBudget(
         id: budgetId,
@@ -99,7 +117,7 @@ final class _Seed {
   final log = InMemoryEventLog();
   late final InMemoryMcpStore store;
   late final String checking, group, groceries, dining, unused;
-  late final String unreviewed, reviewed;
+  late final String unreviewed, reviewed, imported;
 
   BudgetState get state => BudgetState.replay(log.readAll());
 
@@ -227,6 +245,7 @@ Map<String, Map<String, Object?>> _examples(_Seed seed) => {
     'categoryId': seed.groceries,
     'business': 'personal',
   },
+  'mark_imported_reviewed': <String, Object?>{},
 };
 
 void main() {
@@ -396,7 +415,10 @@ void main() {
       expect(line.category, seed.groceries);
       expect(line.business, const Personal());
       expect(line.reviewed, isFalse);
-      expect(seed.state.reviewQueue, hasLength(1));
+      expect(
+        seed.state.reviewQueue.map((item) => item.transaction.id),
+        contains(seed.unreviewed),
+      );
 
       // A person's ReviewLine still finishes the job.
       final person = BudgetEngine(
@@ -429,6 +451,35 @@ void main() {
       expect(
         seed.state.transaction(seed.reviewed)!.lines.single.category,
         seed.dining,
+      );
+    });
+
+    test('mark_imported_reviewed marks only imported lines', () async {
+      final seed = _Seed();
+      final result = await _call(seed, 'mark_imported_reviewed', const {});
+      expect(result.isError, isFalse, reason: result.text);
+      expect(result.content['changes'], 1);
+      expect(result.content['summary'], 'Marked Sample Market −25.99 Reviewed');
+      expect(
+        seed.state.transaction(seed.imported)!.lines.single.reviewed,
+        isTrue,
+      );
+      // The bank-style line a person never reviewed stays in Review.
+      expect(
+        seed.state.transaction(seed.unreviewed)!.lines.single.reviewed,
+        isFalse,
+      );
+
+      final again = await _call(seed, 'mark_imported_reviewed', const {});
+      expect(again.isError, isTrue);
+
+      final undo = await _call(seed, 'revert_change', {
+        'groupId': result.content['groupId'],
+      });
+      expect(undo.isError, isFalse, reason: undo.text);
+      expect(
+        seed.state.transaction(seed.imported)!.lines.single.reviewed,
+        isFalse,
       );
     });
 
@@ -576,6 +627,7 @@ void main() {
           'rename_category',
           'archive_category',
           'suggest_review',
+          'mark_imported_reviewed',
           'revert_change',
         ]),
       );
