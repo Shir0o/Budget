@@ -159,8 +159,8 @@ class _ImportActualScreenState extends State<ImportActualScreen> {
                       lines: [
                         'Imported ${commit.transactions} transactions as one '
                             'group you can revert from Change History.',
-                        'Earlier years are Reviewed; the current tax year is '
-                            'in Review.',
+                        'Lines arrive Reviewed, as they were in Actual. Any '
+                            'that still need a decision are in Review.',
                       ],
                     ),
                     const SizedBox(height: 12),

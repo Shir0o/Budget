@@ -231,7 +231,7 @@ void main() {
       },
     );
 
-    test('imports earlier years Reviewed and the current year Unreviewed', () {
+    test('imports every year Reviewed, as it was in Actual', () {
       final plan = _plan();
       final current = plan.transactions.singleWhere(
         (t) => t.id == 'actual-transaction-tx-current',
@@ -243,7 +243,7 @@ void main() {
         (t) => t.id == 'actual-transaction-tx-open',
       );
 
-      expect(current.lines.single.reviewed, isFalse);
+      expect(current.lines.single.reviewed, isTrue);
       expect(current.lines.single.category, 'actual-category-cat-groceries');
       expect(current.lines.single.business, const Personal());
       expect(rent.lines.single.reviewed, isTrue);
@@ -253,7 +253,7 @@ void main() {
       expect(starting.lines.single.category, readyToAssignCategory);
     });
 
-    test('imports current-year transfers and Starting Balances Unreviewed', () {
+    test('imports current-year transfers and Starting Balances Reviewed', () {
       final export = ActualExport.read(
         ActualZip.decode(syntheticActualZip(extraRows: _visaRows)),
       );
@@ -267,10 +267,9 @@ void main() {
           .lines
           .single;
 
-      expect(line('tx-transfer-out').reviewed, isFalse);
-      expect(line('tx-transfer-in').reviewed, isFalse);
-      expect(line('tx-visa-open').reviewed, isFalse);
-      // Earlier years stay Reviewed.
+      expect(line('tx-transfer-out').reviewed, isTrue);
+      expect(line('tx-transfer-in').reviewed, isTrue);
+      expect(line('tx-visa-open').reviewed, isTrue);
       expect(line('tx-open').reviewed, isTrue);
     });
 
@@ -363,9 +362,9 @@ void main() {
       expect(report.transactions, 15);
       expect(report.incomeCategories, 1);
       expect(report.balancesMatch, isTrue);
-      // The current year's two non-transfer lines on budget accounts: what
+      // Only the line mapped to two tags still needs a decision: what
       // Review lists (asserted against reviewQueue below).
-      expect(report.unreviewedLines, 2);
+      expect(report.unreviewedLines, 1);
       expect(report.lastTransactionDate, CivilDate(2026, 10, 1));
       for (final expected in [
         '3 rules',
@@ -520,7 +519,7 @@ void main() {
         );
         expect(cardPayment?.name, 'Travel Card Payment');
 
-        expect(state.reviewQueue, hasLength(2));
+        expect(state.reviewQueue, hasLength(1));
         expect(plan.report.unreviewedLines, state.reviewQueue.length);
       },
     );

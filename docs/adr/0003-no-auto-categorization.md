@@ -8,7 +8,9 @@ Actual (rules) and YNAB (payee memory) categorize transactions automatically by 
 
 ## Decision
 
-Nothing assigns a category or business status without a person's tap. The app may show a hint chip (last-used values for the payee). Bank sync, schedules, imports, and MCP may only *pre-fill* values; a line becomes Reviewed only after the user confirms it. Actual's rules are not imported.
+Nothing assigns a category or business status without a person's tap. The app may show a hint chip (last-used values for the payee). Bank sync, schedules, and MCP may only *pre-fill* values; a line becomes Reviewed only after the user confirms it. Actual's rules are not imported.
+
+**Amended 2026-11-28:** a one-time import from Actual brings its lines in Reviewed, in every year, because a person already reviewed them there. Lines the import can't settle (mapped to two Business Tags, or a gift with no recipient) still import Unreviewed. New lines from bank sync, schedules and MCP keep the rule above.
 
 ## Consequences
 
