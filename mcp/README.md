@@ -28,10 +28,7 @@ You need Node 20 or newer and the Dart SDK (the build compiles the budget logic 
    npm ci
    npx wrangler login
    ```
-2. **Make the key-value store** that holds the approvals for your MCP clients, and put the id it prints into `wrangler.jsonc` in place of `REPLACE_WITH_YOUR_KV_ID`.
-   ```sh
-   npx wrangler kv namespace create OAUTH_KV
-   ```
+2. **Nothing to do for the key-value store** that holds the approvals for your MCP clients: the first deploy makes it and keeps the Worker linked to it. If Wrangler writes its id into `wrangler.jsonc` afterwards, you don't need to commit that line.
 3. **Make a Google OAuth client** for the Worker. In the Google Cloud console, open the project the app's Google sign-in uses, then *APIs & Services › Credentials › Create credentials › OAuth client ID*, type *Web application*, with `https://developers.google.com/oauthplayground` as an authorized redirect URI.
 4. **Get a refresh token** for that client, limited to the app folder. In the [OAuth 2.0 Playground](https://developers.google.com/oauthplayground), open the gear, tick *Use your own OAuth credentials* and enter the client id and secret. Authorize only `https://www.googleapis.com/auth/drive.appdata`, sign in with the Google account the app syncs to, then *Exchange authorization code for tokens* and copy the refresh token. If the project's consent screen is still in *Testing*, Google expires the token after 7 days, so publish it to *In production*. Google may then show an "unverified app" warning when you sign in, which is expected for an app only you use.
 5. **Store the secrets.** Each command asks for the value; nothing goes in the repo.
@@ -43,10 +40,11 @@ You need Node 20 or newer and the Dart SDK (the build compiles the budget logic 
    npx wrangler secret put GOOGLE_REFRESH_TOKEN
    ```
    The pairing code holds the Budget Key, so anyone with access to this Cloudflare account can read the budget.
-6. **Deploy**, then put the address it prints into `PUBLIC_URL` in `wrangler.jsonc` and deploy once more.
+6. **Deploy.** Note the address it prints, `https://<your worker>`.
    ```sh
    npm run deploy
    ```
+   The Worker works out its own address from each request. To pin it, for example on a custom domain, add `"PUBLIC_URL": "https://<your address>"` under `vars` in `wrangler.jsonc`.
 7. **Connect an AI app.** Add a custom connector (in Claude: *Settings › Connectors › Add custom connector*) with the address `https://<your worker>/mcp`. It opens a page on your Worker that asks for `MCP_ACCESS_PASSWORD`. If the server is in read-write mode, that page also asks whether this app may make changes.
 
 ## Read-write mode
@@ -55,7 +53,7 @@ Set `"MCP_MODE": "read-write"` in `wrangler.jsonc` and deploy. AI apps you appro
 
 ## Turn it off
 
-- **Stop the AI apps:** remove the connector in each app. To cut every approved app off at once, make a new key-value store (step 2) and deploy; each app then has to be approved again.
+- **Stop the AI apps:** remove the connector in each app. To cut every approved app off at once, make a new key-value store with `npx wrangler kv namespace create OAUTH_KV`, put the id it prints into the `OAUTH_KV` entry of `wrangler.jsonc` as `"id"`, and deploy; each app then has to be approved again.
 - **Stop the server:** `npx wrangler delete`. Then make a new Budget Key in the app (Recovery phrase screen) so the copy in Cloudflare no longer opens the budget, and revoke the refresh token at [myaccount.google.com/permissions](https://myaccount.google.com/permissions).
 
 ## Develop
