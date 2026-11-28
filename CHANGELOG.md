@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/Shir0o/Budget/compare/v1.2.0...v1.3.0) (2026-11-28)
+
+
+### Features
+
+* **import:** make new Business Tags from Actual tags and skip number-only #tags ([#27](https://github.com/Shir0o/Budget/issues/27)) ([a141daf](https://github.com/Shir0o/Budget/commit/a141daf71ffb8bba77b44e4c20900cb2314f89a6))
+
 ## [1.2.0](https://github.com/Shir0o/Budget/compare/v1.1.4...v1.2.0) (2026-11-28)
 
 
