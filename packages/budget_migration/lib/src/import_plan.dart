@@ -17,6 +17,8 @@ enum TagSource {
 
 /// One distinct Actual `#tag` or used Category, with how often it appears and
 /// the Business Tag the person chose for it. A null [tag] means nothing.
+/// When [create] is set, [tag] names a new custom Business Tag the import
+/// creates.
 final class TagMapping {
   const TagMapping({
     required this.source,
@@ -24,6 +26,7 @@ final class TagMapping {
     required this.label,
     required this.count,
     this.tag,
+    this.create = false,
   });
 
   final TagSource source;
@@ -38,6 +41,13 @@ final class TagMapping {
   /// A Business Tag name, or null for nothing.
   final String? tag;
 
+  /// Whether the import creates [tag] as a custom Business Tag.
+  final bool create;
+
+  /// The name a new Business Tag made from this mapping gets: the `#tag`
+  /// without its `#`, or the Category's name.
+  String get newTagName => source == TagSource.tag ? label.substring(1) : label;
+
   TagMapping withTag(String? tag) => TagMapping(
     source: source,
     key: key,
@@ -45,15 +55,33 @@ final class TagMapping {
     count: count,
     tag: tag,
   );
+
+  /// Maps this to a new custom Business Tag named [newTagName].
+  TagMapping withNewTag() => TagMapping(
+    source: source,
+    key: key,
+    label: label,
+    count: count,
+    tag: newTagName,
+    create: true,
+  );
 }
+
+/// Where a Business Tag the import creates reports: other expenses, fully
+/// deductible. The person can pick a different line in Settings later.
+const importedTagLine = '27a (other)';
 
 /// The 1:1 mappings verified against the real exports (ticket 18).
 const _defaultTags = {
   'workassets': 'Other business expense',
+  'workconference': 'Conferences & education',
+  'workconferences': 'Conferences & education',
   'workexpenses': 'Other business expense',
   'workmeals': 'Meals',
   'worksubscriptions': 'Software & subscriptions',
   'worksupplies': 'Supplies',
+  'workgift': giftsTag,
+  'workgifts': giftsTag,
   'worktravel': 'Travel',
 };
 
@@ -100,10 +128,13 @@ List<TagMapping> defaultTagMappings(ActualExport export) {
 }
 
 final _tagPattern = RegExp(r'#(\w[\w-]*)');
+final _numberOnly = RegExp(r'^[\d-]+$');
 
-/// Every `#tag` token in [notes], each once.
+/// Every `#tag` token in [notes], each once. A `#` followed only by digits,
+/// like an order or invoice number, isn't a tag.
 Set<String> actualTags(String notes) => {
-  for (final match in _tagPattern.allMatches(notes)) '#${match[1]}',
+  for (final match in _tagPattern.allMatches(notes))
+    if (!_numberOnly.hasMatch(match[1]!)) '#${match[1]}',
 };
 
 /// An Actual account, as the app will create it.
@@ -240,6 +271,18 @@ final class ImportPlan {
     expectedBalancesCents: {
       for (final account in accounts) account.id: account.balanceCents,
     },
+    businessTags: [
+      for (final name in {
+        for (final mapping in tagMappings)
+          if (mapping.create && (mapping.tag?.trim() ?? '').isNotEmpty)
+            mapping.tag!.trim(),
+      })
+        ImportBusinessTag(
+          name: name,
+          line: importedTagLine,
+          rule: const FullDeduction(),
+        ),
+    ],
   );
 
   /// Every account whose imported transactions don't add up to Actual's

@@ -21,6 +21,22 @@ final class ImportAccount {
   final AccountType type;
 }
 
+/// A custom Business Tag an import creates, such as one named after an
+/// Actual `#tag` the person chose to keep as its own tag.
+final class ImportBusinessTag {
+  const ImportBusinessTag({
+    required this.name,
+    required this.line,
+    required this.rule,
+  });
+
+  final String name;
+
+  /// One of [scheduleCLines].
+  final String line;
+  final DeductionRule rule;
+}
+
 /// A Category group an import creates.
 final class ImportCategoryGroup {
   const ImportCategoryGroup({required this.id, required this.name});
@@ -177,6 +193,7 @@ final class ImportBatch {
     required this.schedules,
     required this.targets,
     required this.expectedBalancesCents,
+    this.businessTags = const [],
   });
 
   final List<ImportAccount> accounts;
@@ -187,4 +204,7 @@ final class ImportBatch {
   final List<ImportSchedule> schedules;
   final List<ImportTarget> targets;
   final Map<String, int> expectedBalancesCents;
+
+  /// Custom Business Tags created before the transactions that use them.
+  final List<ImportBusinessTag> businessTags;
 }

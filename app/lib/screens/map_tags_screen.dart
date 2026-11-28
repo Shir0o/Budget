@@ -8,8 +8,9 @@ import '../theme.dart';
 import '../widgets.dart';
 
 /// Import from Actual (ticket 14), step three: map each Actual `#tag` and
-/// used Category to a Business Tag or nothing, then commit the whole plan as
-/// one group. A line that maps to two tags goes to Review instead.
+/// used Category to a Business Tag, a new Business Tag of the same name, or
+/// nothing, then commit the whole plan as one group. A line that maps to two
+/// tags goes to Review instead.
 class MapTagsScreen extends StatefulWidget {
   const MapTagsScreen({super.key, required this.engine, required this.draft});
 
@@ -25,13 +26,26 @@ class _MapTagsScreenState extends State<MapTagsScreen> {
   var _busy = false;
   var _error = '';
 
+  /// The dropdown value that creates a new Business Tag. Not a valid tag
+  /// name, so it can't clash with one.
+  static const _newTag = '\u0000new';
+
   List<String> get _tagNames => [
     for (final tag in widget.engine.state.businessTags) tag.name,
   ];
 
+  /// Whether [mapping] can become a new Business Tag: its name isn't taken.
+  bool _canCreate(TagMapping mapping) {
+    final name = mapping.newTagName.trim().toLowerCase();
+    return name.isNotEmpty &&
+        !_tagNames.any((tag) => tag.toLowerCase() == name);
+  }
+
   void _setTag(int index, String? tag) {
     setState(() {
-      _tags[index] = _tags[index].withTag(tag);
+      _tags[index] = tag == _newTag
+          ? _tags[index].withNewTag()
+          : _tags[index].withTag(tag);
       widget.draft.tags
         ..clear()
         ..addAll(_tags);
@@ -119,8 +133,10 @@ class _MapTagsScreenState extends State<MapTagsScreen> {
                     const SizedBox(height: 12),
                   ],
                   const Hint(
-                    'Each tag and Category becomes one Business Tag, or '
-                    'nothing. Tags stay in the memo either way.',
+                    'Business Tags mark what goes on your Schedule C. Pick '
+                    'one for each tag and Category, make a new tag with the '
+                    'same name, or choose nothing. Tags stay in the memo '
+                    'either way.',
                   ),
                   if (tags.isNotEmpty) ...[
                     const SizedBox(height: 12),
@@ -224,7 +240,7 @@ class _MapTagsScreenState extends State<MapTagsScreen> {
                       key: ValueKey(
                         'tag-map-${mapping.source.name}-${mapping.key}',
                       ),
-                      value: mapping.tag ?? '',
+                      value: mapping.create ? _newTag : mapping.tag ?? '',
                       isExpanded: true,
                       isDense: true,
                       items: [
@@ -232,6 +248,16 @@ class _MapTagsScreenState extends State<MapTagsScreen> {
                           value: '',
                           child: Text('Nothing'),
                         ),
+                        // Kept once chosen: after the commit the tag exists,
+                        // but the screen still shows this choice.
+                        if (mapping.create || _canCreate(mapping))
+                          DropdownMenuItem(
+                            value: _newTag,
+                            child: Text(
+                              'New tag: ${mapping.newTagName}',
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
                         for (final name in _tagNames)
                           DropdownMenuItem(value: name, child: Text(name)),
                       ],
