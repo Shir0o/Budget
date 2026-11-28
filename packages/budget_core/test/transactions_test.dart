@@ -467,14 +467,6 @@ void main() {
         LineInput(amount: const Money(-1250), category: budget.groceries),
       ]);
 
-      expect(
-        _rejected(
-          budget.engine.execute(
-            EditTransaction(transactionId: id, amount: const Money(-1500)),
-          ),
-        ),
-        Rejection.splitDoesNotSum,
-      );
       budget.run(
         EditTransaction(
           transactionId: id,
@@ -486,6 +478,62 @@ void main() {
       );
       expect(budget.state.transaction(id)!.amount, const Money(-1500));
       expect(budget.state.balance(budget.checking), const Money(48500));
+    });
+
+    test('an amount alone moves a single line, keeping everything else', () {
+      final budget = _Budget();
+      final id = budget.enter(-1250, [
+        LineInput(
+          amount: const Money(-1250),
+          category: budget.groceries,
+          business: const Personal(),
+          memo: 'weekly shop',
+        ),
+      ]);
+      final before = budget.state.transaction(id)!.lines.single;
+
+      final events = budget.run(
+        EditTransaction(transactionId: id, amount: const Money(-1500)),
+      );
+
+      expect(events, hasLength(1));
+      final after = budget.state.transaction(id)!;
+      expect(after.amount, const Money(-1500));
+      expect(after.lines.single.id, before.id);
+      expect(after.lines.single.amount, const Money(-1500));
+      expect(after.lines.single.category, budget.groceries);
+      expect(after.lines.single.business, const Personal());
+      expect(after.lines.single.memo, 'weekly shop');
+      expect(after.lines.single.reviewed, before.reviewed);
+      expect(budget.state.balance(budget.checking), const Money(48500));
+    });
+
+    test('an amount alone on a split, or of 0.00, is refused', () {
+      final budget = _Budget();
+      final split = budget.enter(-12000, [
+        LineInput(amount: const Money(-8000), category: budget.groceries),
+        LineInput(amount: const Money(-4000), category: budget.household),
+      ]);
+      final single = budget.enter(-1250, [
+        LineInput(amount: const Money(-1250), category: budget.groceries),
+      ]);
+
+      expect(
+        _rejected(
+          budget.engine.execute(
+            EditTransaction(transactionId: split, amount: const Money(-15000)),
+          ),
+        ),
+        Rejection.splitDoesNotSum,
+      );
+      expect(
+        _rejected(
+          budget.engine.execute(
+            EditTransaction(transactionId: single, amount: Money.zero),
+          ),
+        ),
+        Rejection.zeroAmount,
+      );
     });
 
     test('with nothing new is refused', () {

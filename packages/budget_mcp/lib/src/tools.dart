@@ -461,7 +461,7 @@ final class BudgetTools {
         );
         return ToolResult(_redact(group.toJson()));
       case Accepted():
-        return ToolResult.error('That would change nothing.');
+        return ToolResult.error(_noChange);
     }
   }
 

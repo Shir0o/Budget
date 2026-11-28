@@ -626,6 +626,16 @@ LineInput _asInput(TransactionLine line) => LineInput(
   recipient: line.recipient,
 );
 
+/// [line] with a new [amount] and everything else kept.
+LineInput _withAmount(LineInput line, Money amount) => LineInput(
+  id: line.id,
+  amount: amount,
+  category: line.category,
+  business: line.business,
+  memo: line.memo,
+  recipient: line.recipient,
+);
+
 /// The stored form of a projected line, to tell whether an edit changed it.
 Map<String, Object?> _storedLine(TransactionLine line) => {
   'lineId': line.id,
@@ -842,7 +852,10 @@ CommandResult _editTransaction(
   ];
   if (command.amount != null || command.lines != null) {
     final amount = command.amount ?? transaction.amount;
-    final lines = command.lines ?? transaction.lines.map(_asInput).toList();
+    final current = transaction.lines.map(_asInput).toList();
+    final lines =
+        command.lines ??
+        (current.length == 1 ? [_withAmount(current.single, amount)] : current);
     final kept = {for (final line in transaction.lines) line.category};
     final prior = {for (final line in transaction.lines) line.id: line};
     if (_checkLines(state, amount, lines, kept: kept) case final rejected?) {

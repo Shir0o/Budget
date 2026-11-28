@@ -150,8 +150,9 @@ final writeTools = <WriteTool>[
   WriteTool(
     name: 'update_transaction',
     description:
-        'Changes a transaction’s payee, date, memo or cleared status. '
-        'Fields left out stay as they are.',
+        'Changes a transaction’s payee, date, memo, cleared status or '
+        'amount. Fields left out stay as they are. amountCents works on a '
+        'transaction with one line; for a split, use split_transaction.',
     arguments: {
       'budgetId': BudgetTools._budgetId,
       'transactionId': {'type': 'string'},
@@ -162,6 +163,7 @@ final writeTools = <WriteTool>[
         'type': 'string',
         'enum': ['uncleared', 'cleared', 'reconciled'],
       },
+      'amountCents': _amount,
     },
     required: ['budgetId', 'transactionId'],
     build: _updateTransaction,
@@ -371,6 +373,12 @@ final writeTools = <WriteTool>[
   ),
 ];
 
+/// A write that found everything already as asked. A call that timed out
+/// on the client may still have gone through, so it says where to look.
+const _noChange =
+    'Nothing changed: it already has those values. If an earlier call timed '
+    'out, it probably went through; get_change_history shows it.';
+
 const _reconciledIsAPersons =
     'Reconciled is the person\'s call: they must make that change in the app.';
 
@@ -393,6 +401,10 @@ Command _updateTransaction(ToolRequest request, CalendarMonth thisMonth) =>
       payee: request.text('payee'),
       date: request.date('date'),
       memo: request.text('memo'),
+      amount: switch (request.integer('amountCents')) {
+        null => null,
+        final cents => Money(cents),
+      },
       cleared: switch (request.string('cleared')) {
         null => null,
         'reconciled' => throw const _Refusal(_reconciledIsAPersons),
@@ -589,11 +601,14 @@ String _rejection(Rejection reason) => switch (reason) {
     'A transfer line has nothing to suggest: a transfer isn’t spending.',
   Rejection.personRequired =>
     'Only a person marks a line Reviewed. Use suggest_review instead.',
-  Rejection.noChange => 'That would change nothing.',
+  Rejection.noChange => _noChange,
   Rejection.nameRequired => 'A name is required.',
-  Rejection.zeroAmount => 'An amount of 0.00 changes nothing.',
+  Rejection.zeroAmount =>
+    'An amount can’t be 0.00. To remove a transaction, delete it in the app.',
   Rejection.noLines => 'Give at least one line.',
-  Rejection.splitDoesNotSum => 'The lines must add up to the amount.',
+  Rejection.splitDoesNotSum =>
+    'The lines must add up to the amount. To change a split’s amount, use '
+        'split_transaction with every line.',
   Rejection.amountMustBePositive => 'The amount must be more than zero.',
   Rejection.incomeMustBePositive => 'Income must be more than zero.',
   Rejection.sameCategory => 'Choose two different Categories.',
