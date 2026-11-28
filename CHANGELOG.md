@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.4](https://github.com/Shir0o/Budget/compare/v1.1.3...v1.1.4) (2026-11-28)
+
+
+### Bug Fixes
+
+* **import:** start a new budget from an Actual import ([#23](https://github.com/Shir0o/Budget/issues/23)) ([7c317e0](https://github.com/Shir0o/Budget/commit/7c317e06261f6d64896442d94d637f5b29871669))
+
 ## [1.1.3](https://github.com/Shir0o/Budget/compare/v1.1.2...v1.1.3) (2026-11-28)
 
 
