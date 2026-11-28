@@ -45,7 +45,21 @@ class _MapTagsScreenState extends State<MapTagsScreen> {
       _error = '';
     });
     try {
-      final commit = commitImport(widget.engine, widget.draft.plan());
+      final engine = widget.engine;
+      final plan = widget.draft.plan();
+      final newBudgetName = widget.draft.newBudgetName;
+      if (newBudgetName != null && engine.state.budget == null) {
+        // A new budget is created only with its import. The import is tried
+        // on a scratch copy first, so a refused one leaves no budget behind.
+        final scratch = BudgetEngine(
+          log: InMemoryEventLog(),
+          deviceId: engine.deviceId,
+          actor: engine.actor,
+        )..execute(CreateBudget(name: newBudgetName));
+        commitImport(scratch, plan);
+        engine.execute(CreateBudget(name: newBudgetName));
+      }
+      final commit = commitImport(engine, plan);
       if (mounted) Navigator.of(context).pop(commit);
     } on ImportBlocked catch (error) {
       if (mounted) {

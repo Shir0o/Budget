@@ -4,9 +4,11 @@ import 'package:budget_core/budget_core.dart';
 import 'package:budget_migration/budget_migration.dart';
 import 'package:flutter/material.dart';
 
+import '../budget_library.dart';
 import '../import_draft.dart';
 import '../services.dart';
 import '../settings_widgets.dart';
+import '../shell.dart';
 import '../theme.dart';
 import '../widgets.dart';
 import 'match_names_screen.dart';
@@ -14,15 +16,20 @@ import 'match_names_screen.dart';
 /// Import from Actual (ticket 14), step one: pick the export and see what is
 /// in it. The zip is read here and nothing is written until the commit on
 /// Map tags, so the wizard can be backed out of at any step.
+///
+/// From the first-run screen, [newBudgetName] is set: the budget is created
+/// together with the import, and opens once it is stored.
 class ImportActualScreen extends StatefulWidget {
   const ImportActualScreen({
     super.key,
     required this.engine,
     required this.services,
+    this.newBudgetName,
   });
 
   final BudgetEngine engine;
   final AppServices services;
+  final String? newBudgetName;
 
   @override
   State<ImportActualScreen> createState() => _ImportActualScreenState();
@@ -58,6 +65,7 @@ class _ImportActualScreenState extends State<ImportActualScreen> {
           export: export,
           tags: defaultTagMappings(export),
           today: today(),
+          newBudgetName: widget.newBudgetName,
         );
         _commit = null;
       });
@@ -89,10 +97,33 @@ class _ImportActualScreenState extends State<ImportActualScreen> {
       ),
     );
     if (!mounted || commit == null) return;
+    if (widget.newBudgetName != null) return _openNewBudget(commit);
     setState(() {
       _commit = commit;
       _draft = null;
     });
+  }
+
+  /// Stores the budget the import just created and opens it, as saving the
+  /// first account does.
+  Future<void> _openNewBudget(ImportCommit commit) async {
+    final library = BudgetLibraryScope.of(context);
+    final navigator = Navigator.of(context, rootNavigator: true);
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() => _busy = true);
+    await library.commit(widget.engine);
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(
+          'Imported ${commit.transactions} transactions. You can revert '
+          'them from Change History.',
+        ),
+      ),
+    );
+    navigator.pushAndRemoveUntil(
+      MaterialPageRoute<void>(builder: (_) => const DesktopShell()),
+      (_) => false,
+    );
   }
 
   @override
@@ -145,8 +176,8 @@ class _ImportActualScreenState extends State<ImportActualScreen> {
                         foreground: Palette.inkSoft,
                         lines: const [
                           'This budget already has history. An import is one '
-                              'time per budget, so start a new budget to bring '
-                              'Actual’s history in.',
+                              'time per budget, so choose New budget from the '
+                              'budget switcher, then Import from Actual.',
                         ],
                       )
                   else
