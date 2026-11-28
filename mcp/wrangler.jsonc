@@ -8,16 +8,17 @@
   // Builds the Dart budget logic into src/budget.dart.js before each deploy.
   "build": { "command": "npm run build:dart" },
   "vars": {
-    // Your Worker's address, as `wrangler deploy` prints it.
-    "PUBLIC_URL": "https://budget-mcp.yilongwang05.workers.dev",
+    // The Worker's address comes from each request. To pin it, for example
+    // to a custom domain, add "PUBLIC_URL": "https://<your address>" here.
     // read-only or read-write.
     "MCP_MODE": "read-only",
     // In read-write mode, which write tools to offer.
     "MCP_WRITE_TOOLS": "suggest_review,update_transaction,revert_change"
   },
   "kv_namespaces": [
-    // Make it with: npx wrangler kv namespace create OAUTH_KV
-    { "binding": "OAUTH_KV", "id": "ed04d2f87d904c058ff2b237a636ffd7" }
+    // No id: `wrangler deploy` makes the store on the first deploy and keeps
+    // the Worker linked to it after that, so no account id lives in git.
+    { "binding": "OAUTH_KV" }
   ],
   "observability": { "enabled": true }
 }

@@ -4,8 +4,12 @@ import type { OAuthHelpers } from "@cloudflare/workers-oauth-provider";
 export interface Env {
   /** Grants, clients and tokens for the MCP clients you approve. */
   OAUTH_KV: KVNamespace;
-  /** The Worker's own address, like https://budget-mcp.example.workers.dev. */
-  PUBLIC_URL: string;
+  /**
+   * Optional: the Worker's own address, like
+   * https://budget-mcp.example.workers.dev. Left out, each request's own
+   * origin is used.
+   */
+  PUBLIC_URL?: string;
   /** `read-only` (the default) or `read-write`. */
   MCP_MODE?: string;
   /** Write tools offered in read-write mode, comma-separated. */

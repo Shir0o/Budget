@@ -7,8 +7,12 @@ import { handleMcp, type McpContext } from "./mcp";
 let provider: OAuthProvider<Env> | undefined;
 let providerFor: string | undefined;
 
-function oauth(env: Env): OAuthProvider<Env> {
-  const origin = new URL(env.PUBLIC_URL).origin;
+/** The Worker's origin: PUBLIC_URL when it is set, otherwise the request's. */
+function originOf(request: Request, env: Env): string {
+  return new URL(env.PUBLIC_URL?.trim() || request.url).origin;
+}
+
+function oauth(origin: string): OAuthProvider<Env> {
   if (provider && providerFor === origin) return provider;
   provider = new OAuthProvider<Env>({
     apiRoute: "/mcp",
@@ -41,9 +45,6 @@ function oauth(env: Env): OAuthProvider<Env> {
 
 export default {
   fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-    if (!env.PUBLIC_URL) {
-      return Promise.resolve(new Response("Set PUBLIC_URL in wrangler.jsonc.", { status: 503 }));
-    }
-    return oauth(env).fetch(request, env, ctx);
+    return oauth(originOf(request, env)).fetch(request, env, ctx);
   },
 } satisfies ExportedHandler<Env>;
