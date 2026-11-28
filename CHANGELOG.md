@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.4.0](https://github.com/Shir0o/Budget/compare/v1.3.0...v1.4.0) (2026-11-28)
+
+
+### Features
+
+* **import:** bring Actual lines in Reviewed in every year ([#31](https://github.com/Shir0o/Budget/issues/31)) ([6e81d5b](https://github.com/Shir0o/Budget/commit/6e81d5b175c68a95cbec08fbee78b4117227fc03))
+* **mcp:** add mark_imported_reviewed to clear an old import from Review ([#32](https://github.com/Shir0o/Budget/issues/32)) ([9de8147](https://github.com/Shir0o/Budget/commit/9de8147ce8e522d490e57de070e26e0dd43d3646))
+
+
+### Bug Fixes
+
+* **mcp:** amount edits, clearer no-change message, line counts in Review summary ([#35](https://github.com/Shir0o/Budget/issues/35)) ([ece2257](https://github.com/Shir0o/Budget/commit/ece225734561482c26fce1fc0add0a90da678f9d))
+* **migration:** name budget Categories and accounts in YNAB differences ([#36](https://github.com/Shir0o/Budget/issues/36)) ([f3c17aa](https://github.com/Shir0o/Budget/commit/f3c17aafc31b113dfe8def325973e94b4e5fe50e))
+* **simplefin:** ask for 90 days counting today, not 91 ([#29](https://github.com/Shir0o/Budget/issues/29)) ([03987e4](https://github.com/Shir0o/Budget/commit/03987e473cfc32697224faceaa67c1e768ae312d))
+
 ## [1.3.0](https://github.com/Shir0o/Budget/compare/v1.2.0...v1.3.0) (2026-11-28)
 
 
