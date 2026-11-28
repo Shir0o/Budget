@@ -6,6 +6,7 @@ import '../services.dart';
 import '../theme.dart';
 import '../widgets.dart';
 import 'add_account_screen.dart';
+import 'import_screen.dart';
 import 'join_screen.dart';
 
 /// First run (canvas: FirstRun). Nothing is written until the first account
@@ -120,6 +121,11 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     child: const Text('Add your first account'),
                   ),
                   TextButton(
+                    key: const ValueKey('import-from-welcome'),
+                    onPressed: _importFromActual,
+                    child: const Text('Import from Actual'),
+                  ),
+                  TextButton(
                     key: const ValueKey('join-from-welcome'),
                     onPressed: _join,
                     child: const Text('Join a budget from another device'),
@@ -133,16 +139,33 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     );
   }
 
+  /// Whether the budget name is filled in, with the error shown if not.
+  bool _named() {
+    final named = _name.text.trim().isNotEmpty;
+    setState(() => _nameError = named ? null : 'Name your budget');
+    return named;
+  }
+
   void _addFirstAccount() {
-    if (_name.text.trim().isEmpty) {
-      setState(() => _nameError = 'Name your budget');
-      return;
-    }
-    setState(() => _nameError = null);
+    if (!_named()) return;
     openFlow<void>(
       context,
       builder: (_) =>
           AddAccountScreen(engine: widget.engine, newBudgetName: _name.text),
+    );
+  }
+
+  /// A new budget can start from Actual's history instead of a first account
+  /// (ticket 14): an import is one time per budget, so it has to come first.
+  void _importFromActual() {
+    if (!_named()) return;
+    openFlow<void>(
+      context,
+      builder: (_) => ImportActualScreen(
+        engine: widget.engine,
+        services: AppServicesScope.of(context),
+        newBudgetName: _name.text,
+      ),
     );
   }
 

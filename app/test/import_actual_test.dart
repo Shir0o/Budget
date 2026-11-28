@@ -211,6 +211,58 @@ void main() {
     expect(find.byKey(const ValueKey('choose-actual-export')), findsOneWidget);
   });
 
+  testWidgets('a new budget can start from an Actual import', (tester) async {
+    tester.view.physicalSize = const Size(800, 1600);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final log = InMemoryEventLog();
+    final engine = BudgetEngine(
+      log: log,
+      deviceId: 'test-device',
+      actor: Actor.userAndroid,
+    );
+    final services = AppServices.inMemory();
+    (services.loader as InMemoryFileLoader).next = _zip();
+    await tester.pumpWidget(BudgetApp(engine: engine, services: services));
+
+    expect(find.text('Give every dollar a job'), findsOneWidget);
+    await tester.enterText(find.byKey(const ValueKey('budget-name')), 'Home');
+    await tester.tap(find.byKey(const ValueKey('import-from-welcome')));
+    await tester.pumpAndSettle();
+
+    // Nothing is written while the wizard is open.
+    await tester.tap(find.byKey(const ValueKey('choose-actual-export')));
+    await tester.pumpAndSettle();
+    expect(engine.state.budget, isNull);
+
+    await tester.ensureVisible(
+      find.byKey(const ValueKey('import-match-names')),
+    );
+    await tester.tap(find.byKey(const ValueKey('import-match-names')));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const ValueKey('import-map-tags')));
+    await tester.tap(find.byKey(const ValueKey('import-map-tags')));
+    await tester.pumpAndSettle();
+    expect(engine.state.budget, isNull);
+    await tester.ensureVisible(find.byKey(const ValueKey('import-commit')));
+    await tester.tap(find.byKey(const ValueKey('import-commit')));
+    await tester.pumpAndSettle();
+
+    // The budget and its history arrive together, with no account of its own.
+    final state = engine.state;
+    expect(state.budget?.name, 'Home');
+    expect(
+      state.accounts.map((account) => account.name),
+      unorderedEquals(['Everyday Checking', 'Travel Card']),
+    );
+    expect(find.text('Give every dollar a job'), findsNothing);
+    expect(find.textContaining('Imported 4 transactions'), findsOneWidget);
+    expect(
+      log.readAll().where((event) => event.actor.value != 'import'),
+      hasLength(1),
+    );
+  });
+
   testWidgets('will not import into a budget that already has history', (
     tester,
   ) async {
