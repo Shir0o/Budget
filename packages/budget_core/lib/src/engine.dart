@@ -288,6 +288,9 @@ CommandResult _decide(Command command, BudgetState state, _Stamp stamp) {
     case SuggestReview():
       return _suggestReview(command, state, stamp);
 
+    case MarkImportedReviewed():
+      return _markImportedReviewed(state, stamp);
+
     case DeleteTransaction(:final transactionId):
       final transaction = state.transaction(transactionId);
       if (transaction == null) {
@@ -690,6 +693,47 @@ CommandResult _reviewLine(ReviewLine command, BudgetState state, _Stamp stamp) {
       ...?business?.toJson(),
       'recipient': ?recipient,
     }),
+  ]);
+}
+
+/// Marks the imported lines that need nothing more Reviewed, one
+/// TransactionSplitSet per transaction, so Change History can revert the
+/// whole change at once (ADR 0003, amended).
+CommandResult _markImportedReviewed(BudgetState state, _Stamp stamp) {
+  final kind = stamp.actor.kind;
+  if (kind != ActorKind.person && kind != ActorKind.mcp) {
+    return const Rejected(Rejection.personRequired);
+  }
+  final ready = <String, Set<String>>{};
+  for (final item in state.reviewQueue) {
+    final transaction = item.transaction;
+    final line = item.line;
+    if (!state.createdByImport(transaction.id)) continue;
+    final need = reviewNeed(
+      category: line.category,
+      business: line.business,
+      recipient: line.recipient,
+    );
+    if (need != null) continue;
+    ready.putIfAbsent(transaction.id, () => {}).add(line.id);
+  }
+  if (ready.isEmpty) return const Rejected(Rejection.noChange);
+  Map<String, Object?> stored(TransactionLine line, {required bool reviewed}) =>
+      {..._storedLine(line), 'note': ?line.note, 'reviewed': reviewed};
+  return Accepted([
+    for (final MapEntry(key: id, value: lineIds) in ready.entries)
+      if (state.transaction(id) case final transaction?)
+        stamp.event(EventType.transactionSplitSet, {
+          'transactionId': transaction.id,
+          'amountCents': transaction.amount.cents,
+          'lines': [
+            for (final line in transaction.lines)
+              stored(
+                line,
+                reviewed: line.reviewed || lineIds.contains(line.id),
+              ),
+          ],
+        }),
   ]);
 }
 

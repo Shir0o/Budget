@@ -671,4 +671,102 @@ void main() {
       expect(budget.state.payeeHint('Paper & Co.'), isNull);
     });
   });
+
+  group('MarkImportedReviewed (ADR 0003, amended)', () {
+    const mcp = Actor.fromValue('mcp:Sample client');
+
+    test('marks only imported lines that need nothing more, as one group', () {
+      final budget = _Budget();
+      final ready = budget.spend(
+        1200,
+        category: budget.diningOut,
+        business: const Personal(),
+        actor: Actor.imported,
+      );
+      final noCategory = budget.spend(
+        800,
+        business: const Personal(),
+        actor: Actor.imported,
+      );
+      final giftNoRecipient = budget.spend(
+        2500,
+        category: budget.groceries,
+        business: const Business(giftsTag),
+        actor: Actor.imported,
+      );
+      final fromBank = budget.spend(
+        900,
+        category: budget.groceries,
+        business: const Personal(),
+        actor: Actor.bankSync,
+      );
+
+      final events = budget.run(const MarkImportedReviewed(), mcp);
+
+      expect(events, hasLength(1));
+      expect(events.single.type, EventType.transactionSplitSet);
+      expect(events.single.actor, mcp);
+      expect(budget.line(ready).reviewed, isTrue);
+      expect(budget.line(ready).category, budget.diningOut);
+      expect(budget.line(noCategory).reviewed, isFalse);
+      expect(budget.line(giftNoRecipient).reviewed, isFalse);
+      expect(budget.line(fromBank).reviewed, isFalse);
+    });
+
+    test('reverting the change puts the lines back in Review', () {
+      final budget = _Budget();
+      final first = budget.spend(
+        1200,
+        category: budget.diningOut,
+        business: const Personal(),
+        actor: Actor.imported,
+      );
+      final second = budget.spend(
+        3400,
+        category: budget.groceries,
+        business: const Personal(),
+        actor: Actor.imported,
+      );
+      final events = budget.run(const MarkImportedReviewed(), mcp);
+      expect(events, hasLength(2));
+      expect(events.map((e) => e.groupId).toSet(), hasLength(1));
+      expect(
+        ChangeHistory.of(budget.log.readAll())
+            .entry(events.first.groupId)
+            ?.summary,
+        'Marked 2 transactions Reviewed',
+      );
+
+      budget.run(RevertGroup(groupId: events.first.groupId), mcp);
+
+      expect(budget.line(first).reviewed, isFalse);
+      expect(budget.line(second).reviewed, isFalse);
+    });
+
+    test('a person may run it too, but not bank sync or automation', () {
+      final budget = _Budget();
+      budget.spend(
+        1200,
+        category: budget.diningOut,
+        business: const Personal(),
+        actor: Actor.imported,
+      );
+      for (final actor in [Actor.bankSync, Actor.automation, Actor.imported]) {
+        expect(
+          _rejected(budget.execute(const MarkImportedReviewed(), actor)),
+          Rejection.personRequired,
+        );
+      }
+      expect(budget.run(const MarkImportedReviewed()), hasLength(1));
+    });
+
+    test('changes nothing when no imported line is ready', () {
+      final budget = _Budget();
+      budget.spend(800, business: const Personal(), actor: Actor.imported);
+      expect(
+        _rejected(budget.execute(const MarkImportedReviewed(), mcp)),
+        Rejection.noChange,
+      );
+    });
+  });
 }

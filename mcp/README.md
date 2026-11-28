@@ -8,7 +8,8 @@ A Cloudflare Worker that lets AI apps (Claude on the web, phone or desktop, or a
 
 - **Read:** every read tool of [ticket 13](../docs/wayfinder/tickets/13-mcp-tools-redaction.md), with the same redaction of card and account numbers.
 - **Write (only with `MCP_MODE=read-write`):** by default `suggest_review` (fills a line's Category and Personal/Business; the line stays Unreviewed until you confirm it in the app), `update_transaction` (payee, date, memo, cleared) and `revert_change` (undoes a change made through MCP). Change `MCP_WRITE_TOOLS` to offer fewer, or other tools from ticket 13.
-- **Never:** delete anything, mark a line Reviewed, or touch sync, keys or bank connections.
+- **Clear an old import from Review (opt-in):** add `mark_imported_reviewed` to `MCP_WRITE_TOOLS` to let an AI app mark Reviewed, as one change you can revert, the Unreviewed lines an Actual import brought in before imports arrived Reviewed. It only touches imported lines that already have a Category and Personal or Business (and a recipient for a gift). Take it out of the list again once you've used it.
+- **Never:** delete anything, mark a line Reviewed that you entered, bank sync fetched or an AI app added, or touch sync, keys or bank connections.
 
 Every change shows in the app's Change History as `Cloud · mcp:<client name>` and can be reverted there.
 

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'actor.dart';
 import 'civil_date.dart';
 import 'commands.dart';
@@ -857,6 +859,9 @@ final class ChangeHistory {
     if (records.every((r) => r.event.type == EventType.transactionCreated)) {
       return 'Added ${records.length} transactions';
     }
+    if (records.every(_onlyMarksReviewed)) {
+      return 'Marked ${records.length} transactions Reviewed';
+    }
     if (effects.map((e) => e.entity).toSet().length == 1 &&
         effects.first.entity.kind == EntityKind.transaction) {
       final a = records.first.applied!.first;
@@ -1085,3 +1090,31 @@ String _redactField(RedactTarget target) => switch (target.field) {
 String _list(List<String> names) => names.length == 1
     ? names.single
     : '${names.sublist(0, names.length - 1).join(', ')} and ${names.last}';
+
+/// Whether [record] is a TransactionSplitSet that only marks lines Reviewed,
+/// as MarkImportedReviewed writes, with every other value unchanged.
+bool _onlyMarksReviewed(_Record record) {
+  if (record.event.type != EventType.transactionSplitSet) return false;
+  final applied = record.applied;
+  if (applied == null || applied.length != 1) return false;
+  final effect = applied.single.effect;
+  if (effect is! SetsFields) return false;
+  final before = applied.single.before[splitField];
+  final after = effect.fields[splitField];
+  if (before is! Map || after is! Map) return false;
+  if (before['amountCents'] != after['amountCents']) return false;
+  final oldLines = (before['lines'] as List?) ?? const [];
+  final newLines = (after['lines'] as List?) ?? const [];
+  if (oldLines.length != newLines.length) return false;
+  var marked = false;
+  for (var i = 0; i < oldLines.length; i++) {
+    final old = Map<String, Object?>.of((oldLines[i] as Map).cast());
+    final now = Map<String, Object?>.of((newLines[i] as Map).cast());
+    if (old['reviewed'] != true && now['reviewed'] == true) marked = true;
+    if (old['reviewed'] == true && now['reviewed'] != true) return false;
+    old.remove('reviewed');
+    now.remove('reviewed');
+    if (jsonEncode(old) != jsonEncode(now)) return false;
+  }
+  return marked;
+}

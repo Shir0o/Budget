@@ -115,6 +115,18 @@ void main() {
     expect(names, isNot(contains('assign')));
     expect(names.where((n) => '$n'.startsWith('delete')), isEmpty);
     expect(names, isNot(contains('mark_reviewed')));
+    // Marking imported lines Reviewed is opt-in.
+    expect(names, isNot(contains('mark_imported_reviewed')));
+    final optedIn = {
+      for (final tool in cloud(
+        writeTools: {
+          ...CloudConfig.defaultWriteTools,
+          'mark_imported_reviewed',
+        },
+      ).toolList)
+        tool['name'],
+    };
+    expect(optedIn, contains('mark_imported_reviewed'));
   });
 
   test(

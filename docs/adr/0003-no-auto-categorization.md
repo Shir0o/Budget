@@ -12,6 +12,8 @@ Nothing assigns a category or business status without a person's tap. The app ma
 
 **Amended 2026-11-28:** a one-time import from Actual brings its lines in Reviewed, in every year, because a person already reviewed them there. Lines the import can't settle (mapped to two Business Tags, or a gift with no recipient) still import Unreviewed. New lines from bank sync, schedules and MCP keep the rule above.
 
+**Amended again 2026-11-28:** for a budget imported before that change, the MCP write tool `mark_imported_reviewed` (offered only in read-write mode, and on the cloud server only when `MCP_WRITE_TOOLS` names it) marks Reviewed, as one revertable change, the Unreviewed lines a one-time import created that need nothing more. It never touches lines from bank sync, schedules, MCP or a person, nor imported lines that still need a Category, Personal or Business, a Business Tag or a gift's recipient.
+
 ## Consequences
 
 - More taps per transaction. This is by design: review is part of the product.

@@ -1,3 +1,4 @@
+import 'actor.dart';
 import 'civil_date.dart';
 import 'event.dart';
 import 'money.dart';
@@ -327,6 +328,9 @@ final class BudgetState {
   final _accounts = <String, Account>{};
   final _transactions = <String, Transaction>{};
   final _deleted = <String>{};
+
+  /// Ids of transactions a one-time import created (actor `import`).
+  final _imported = <String>{};
   final _groups = <String, CategoryGroup>{};
   final _categories = <String, Category>{};
 
@@ -376,6 +380,10 @@ final class BudgetState {
 
   /// Null when it doesn't exist or was deleted.
   Transaction? transaction(String id) => _transactions[id];
+
+  /// Whether a one-time import, such as the Actual wizard, created
+  /// transaction [id] (ticket 14).
+  bool createdByImport(String id) => _imported.contains(id);
 
   /// [accountId]'s transactions, newest date first. Same-day ones are
   /// newest added first.
@@ -579,6 +587,7 @@ final class BudgetState {
       case EventType.transactionCreated:
         final id = p['transactionId'] as String;
         if (_deleted.contains(id)) return;
+        if (event.actor.kind == ActorKind.import) _imported.add(id);
         _transactions[id] = Transaction(
           id: id,
           accountId: p['accountId'] as String,

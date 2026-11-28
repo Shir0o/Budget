@@ -32,7 +32,7 @@ Which MCP tools does the local server expose, what are its write limits, and how
 ### Never exposed
 
 - Deleting budgets, accounts, or transactions. MCP can only archive budgets and accounts, and can't remove transactions at all.
-- Bank-sync credentials or settings, sync and key settings, MCP settings, export or backup, redaction, and marking a line Reviewed.
+- Bank-sync credentials or settings, sync and key settings, MCP settings, export or backup, redaction, and marking a line Reviewed. The one exception is `mark_imported_reviewed`, which marks Reviewed the lines a one-time import brought in that need nothing more (ADR 0003, amended).
 
 ### Audit
 

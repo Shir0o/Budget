@@ -65,7 +65,9 @@ final class CloudConfig {
 
   /// Write tools offered in Read-write mode. A name that isn't one of
   /// ticket 13's write tools does nothing; nothing can add a tool that
-  /// deletes or marks a line Reviewed, because none exists.
+  /// deletes, because none exists. `mark_imported_reviewed`, the one tool
+  /// that marks lines Reviewed (only lines an import brought in), is
+  /// offered only when named here.
   final Set<String> writeTools;
 
   /// The Drive folder this server writes its own segments to.
