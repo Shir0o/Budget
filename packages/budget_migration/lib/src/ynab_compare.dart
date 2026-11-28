@@ -719,7 +719,12 @@ ComparisonTally _transactions(
   matches.addAll(nearby);
 
   for (final match in matches) {
-    final differences = _differences(match.entry, match.transaction, pairing);
+    final differences = _differences(
+      match.entry,
+      match.transaction,
+      pairing,
+      actual,
+    );
     if (differences.isEmpty) {
       tally.count(ComparisonStatus.matched);
       continue;
@@ -787,6 +792,7 @@ List<String> _differences(
   YnabEntry entry,
   Transaction transaction,
   NamePairing pairing,
+  BudgetState actual,
 ) {
   final differences = <String>[];
   if (entry.date != transaction.date) {
@@ -800,7 +806,7 @@ List<String> _differences(
     if (paired != null && paired != transaction.transferAccountId) {
       differences.add(
         'Transfer to “$target” → '
-        '“${_accountName(pairing, transaction.transferAccountId)}”',
+        '“${_accountName(pairing, actual, transaction.transferAccountId)}”',
       );
     }
   } else if (!_sameText(entry.payee, transaction.payee)) {
@@ -824,7 +830,7 @@ List<String> _differences(
     if (expected != null && expected != actualLine.category) {
       differences.add(
         'Category “${ynabLine.category}” → '
-        '${_categoryLabel(pairing, actualLine.category)}',
+        '“${_categoryLabel(pairing, actual, actualLine.category)}”',
       );
     }
     if (!entry.isSplit) continue;
@@ -838,25 +844,37 @@ List<String> _differences(
   return differences;
 }
 
-String _accountName(NamePairing pairing, String? accountId) {
+/// An account's name as the budget has it, even when nothing in YNAB
+/// pairs with it. Never its id: the person reads this.
+String _accountName(
+  NamePairing pairing,
+  BudgetState actual,
+  String? accountId,
+) {
   if (accountId == null) return 'none';
   for (final pair in pairing.pairs) {
     if (pair.kind == PairKind.account && pair.actualId == accountId) {
-      return pair.actualName ?? accountId;
+      if (pair.actualName case final name?) return name;
     }
   }
-  return accountId;
+  return actual.account(accountId)?.name ?? 'an unknown account';
 }
 
-String _categoryLabel(NamePairing pairing, String? categoryId) {
+/// A Category's name as the budget has it, even when nothing in YNAB pairs
+/// with it. Never its id: the person reads this.
+String _categoryLabel(
+  NamePairing pairing,
+  BudgetState actual,
+  String? categoryId,
+) {
   if (categoryId == null) return 'none';
   if (categoryId == readyToAssignCategory) return 'Ready to Assign';
   for (final pair in pairing.pairs) {
     if (pair.kind == PairKind.category && pair.actualId == categoryId) {
-      return pair.actualName ?? categoryId;
+      if (pair.actualName case final name?) return name;
     }
   }
-  return categoryId;
+  return actual.category(categoryId)?.name ?? 'an unknown Category';
 }
 
 String _clearedLabel(ClearedStatus status) => switch (status) {

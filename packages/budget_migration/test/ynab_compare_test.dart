@@ -450,6 +450,63 @@ Everyday Checking,,01/05/2024,Landlord,Bills: Rent,Bills,Rent,,12.345,,Cleared
     });
   });
 
+  group('names in a difference', () {
+    test('a budget Category YNAB doesn’t have shows its name, not its id', () {
+      final log = InMemoryEventLog();
+      final engine = BudgetEngine(
+        log: log,
+        deviceId: 'test-device',
+        actor: Actor.userAndroid,
+      );
+      Map<String, Object?> payload(Command command) =>
+          (engine.execute(command) as Accepted).events.first.payload;
+      payload(const CreateBudget(name: 'Home'));
+      final checking =
+          payload(
+                AddAccount(
+                  name: 'Everyday Checking',
+                  type: AccountType.checking,
+                  startingBalance: const Money(500000),
+                  asOf: CivilDate(2024, 1, 2),
+                ),
+              )['accountId']
+              as String;
+      final group =
+          payload(const CreateCategoryGroup(name: 'Bills'))['categoryGroupId']
+              as String;
+      payload(CreateCategory(groupId: group, name: 'Groceries'));
+      final snacks =
+          payload(CreateCategory(groupId: group, name: 'Snacks'))['categoryId']
+              as String;
+      payload(
+        CreateTransaction(
+          accountId: checking,
+          date: CivilDate(2024, 1, 6),
+          amount: const Money(-12040),
+          payee: 'Corner Market',
+          lines: [LineInput(amount: const Money(-12040), category: snacks)],
+        ),
+      );
+
+      final state = engine.state;
+      final comparison = compareWithYnab(
+        ynab: _ynab,
+        actual: state,
+        pairing: proposePairs(ynab: _ynab, actual: state),
+      );
+      final item = comparison
+          .itemsFor(ComparisonCheck.transactions)
+          .singleWhere(
+            (item) =>
+                item.status == ComparisonStatus.differs &&
+                item.label.startsWith('Corner Market'),
+          );
+
+      expect(item.detail, contains('Category “Groceries” → “Snacks”'));
+      expect(item.detail, isNot(contains(snacks)));
+    });
+  });
+
   group('pullBatch', () {
     test('adds the chosen transaction Unreviewed and the assignment', () {
       final comparison = _compare();
